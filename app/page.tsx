@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
+import Link from 'next/link';
 
 const HomePage = () => {
     const router = useRouter();
