@@ -1,0 +1,1 @@
+export type MeasurementType = "full-body-suit" | "helmet";
