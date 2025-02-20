@@ -51,7 +51,7 @@ const MeasurementPage = () => {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    type: "full-body-suit",
+                    type: "full-body-suit", // or "helmet"
                     orderNumber,
                     ebayUsername,
                     measurements: formData,
@@ -66,6 +66,8 @@ const MeasurementPage = () => {
                     router.push("/");
                 }, 1000);
             } else {
+                const error = await response.json();
+                console.error("Submission error:", error);
                 setShowFailure(true);
                 setTimeout(() => {
                     setShowFailure(false);
