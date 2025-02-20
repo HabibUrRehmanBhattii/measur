@@ -48,6 +48,12 @@ const measurementRanges = {
   "Fußlänge (Foot Length)": { min: 20, max: 40 },
 };
 
+// Type for measurement ranges
+interface MeasurementRange {
+  min: number;
+  max: number;
+}
+
 // Measurement groups
 const measurementGroups = {
   "Full Body": ["Gesamthöhe (Total Height)"],
@@ -71,6 +77,15 @@ const measurementGroups = {
   "Feet": ["Fußlänge (Foot Length)"],
 };
 
+// Type for form data and errors
+type MeasurementKey = keyof typeof measurementRanges;
+interface FormData {
+  [key: MeasurementKey]: string;
+}
+interface Errors {
+  [key: MeasurementKey]: string | null;
+}
+
 const measurementsList = [
   { name: "Gesamthöhe (Total Height)", image: "total_height" },
   { name: "Brustumfang (Chest Circumference)", image: "chest_circumference" },
@@ -88,34 +103,39 @@ const measurementsList = [
   { name: "Reiterate (Head Width)", image: "head_width" },
   { name: "Kopfumfang (Head Circumference)", image: "head_circumference" },
   { name: "Fußlänge (Foot Length)", image: "foot_length" },
-];
+] as const;
 
+// Define MeasurementPage as a client component without props
 const MeasurementPage = () => {
   const router = useRouter();
-  const containerRef = useRef(null);
-  const [formData, setFormData] = useState({});
-  const [errors, setErrors] = useState({});
-  const [orderNumber, setOrderNumber] = useState("");
-  const [ebayUsername, setEbayUsername] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [showFailure, setShowFailure] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [formData, setFormData] = useState<FormData>({});
+  const [errors, setErrors] = useState<Errors>({});
+  const [orderNumber, setOrderNumber] = useState<string>("");
+  const [ebayUsername, setEbayUsername] = useState<string>("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [showFailure, setShowFailure] = useState<boolean>(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleChange = (name, value) => {
+  const handleChange = (name: MeasurementKey, value: string) => {
     setFormData({ ...formData, [name]: value });
     if (value) {
       const range = measurementRanges[name];
-      if (range && (value < range.min || value > range.max)) {
-        setErrors({ ...errors, [name]: `Value must be between ${range.min} and ${range.max} cm` });
+      const numericValue = parseFloat(value);
+      if (range && (numericValue < range.min || numericValue > range.max)) {
+        setErrors({
+          ...errors,
+          [name]: `Value must be between ${range.min} and ${range.max} cm`,
+        });
       } else {
         setErrors({ ...errors, [name]: null });
       }
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (Object.values(errors).some((error) => error)) {
       alert("Please correct the errors before submitting.");
@@ -164,7 +184,7 @@ const MeasurementPage = () => {
   }, []);
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (!selectedImage) return;
       const currentIndex = measurementsList.findIndex((m) => m.image === selectedImage);
       if (e.key === "ArrowRight") {
@@ -247,7 +267,7 @@ const MeasurementPage = () => {
                 <h2 className="text-xl font-bold text-white mb-4">{group}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {measurements.map((measurement) => {
-                    const field = measurementsList.find((m) => m.name === measurement);
+                    const field = measurementsList.find((m) => m.name === measurement)!;
                     return (
                       <div
                         key={field.name}
@@ -348,8 +368,13 @@ const MeasurementPage = () => {
   );
 };
 
-const Tooltip = ({ children, text }) => {
-  const [show, setShow] = useState(false);
+interface TooltipProps {
+  children: React.ReactNode;
+  text: string;
+}
+
+const Tooltip = ({ children, text }: TooltipProps) => {
+  const [show, setShow] = useState<boolean>(false);
   return (
     <div
       className="relative"
@@ -367,4 +392,3 @@ const Tooltip = ({ children, text }) => {
 };
 
 export default MeasurementPage;
-
