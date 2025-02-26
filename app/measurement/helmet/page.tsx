@@ -1,193 +1,367 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useContext } from "react";
 import { useRouter } from "next/navigation";
-import gsap from "gsap";
-import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import { ThemeContext } from "@/app/layout";
+import { Header } from "@/app/components/Header";
+import { Footer } from "@/app/components/Footer";
+import { FormInput } from "@/app/components/FormInput";
+import { MeasurementCard } from "@/app/components/MeasurementCard";
+import { MeasurementModal } from "@/app/components/MeasurementModal";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import SuccessAnimation from "@/app/components/SuccessAnimation";
 import FailureAnimation from "@/app/components/FailureAnimation";
+import { GradientText, Badge } from "@/app/utils/ui";
+import { Info, Save } from "lucide-react";
 
+// Helmet measurement types with validation ranges
 const helmetMeasurements = [
-    { name: "Reiterate (Head Width)", image: "head_width" },
-    { name: "Kopfumfang (Head Circumference)", image: "head_circumference" },
+  {
+    name: "Kopfbreite (Head Width)",
+    description: "Measure the width of your head from ear to ear.",
+    image: "head_width",
+    min: 10,
+    max: 30,
+  },
+  {
+    name: "Kopfumfang (Head Circumference)",
+    description: "Measure around your head above the ears and eyebrows.",
+    image: "head_circumference",
+    min: 40,
+    max: 70,
+  },
 ];
 
-const HelmetPage = () => {
-    const router = useRouter();
-    const containerRef = useRef(null);
-    const [formData, setFormData] = useState<{ [key: string]: string }>({});
-    const [orderNumber, setOrderNumber] = useState("");
-    const [ebayUsername, setEbayUsername] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
-    const [showFailure, setShowFailure] = useState(false);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+export default function HelmetPage() {
+  const router = useRouter();
+  const { resolvedTheme } = useContext(ThemeContext);
+  
+  // Form state
+  const [formData, setFormData] = useState<{ [key: string]: string }>({});
+  const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
+  const [orderNumber, setOrderNumber] = useState<string>("");
+  const [ebayUsername, setEbayUsername] = useState<string>("");
+  
+  // UI state
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [showFailure, setShowFailure] = useState<boolean>(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-    const handleChange = (name: string, value: string) => {
-        setFormData({ ...formData, [name]: value });
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        
-        try {
-            const response = await fetch("/api/submitMeasurement", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    type: "helmet",
-                    orderNumber,
-                    ebayUsername,
-                    measurements: formData,
-                }),
-            });
-
-            setIsSubmitting(false);
-
-            if (response.ok) {
-                setShowSuccess(true);
-                setTimeout(() => {
-                    router.push("/");
-                }, 1000);
-            } else {
-                setShowFailure(true);
-                setTimeout(() => {
-                    setShowFailure(false);
-                }, 1500);
-            }
-        } catch (error) {
-            setIsSubmitting(false);
-            console.error("Error submitting data:", error);
-            setShowFailure(true);
-            setTimeout(() => {
-                setShowFailure(false);
-            }, 1500);
+  // Handle measurement input change
+  const handleChange = (name: string, value: string) => {
+    setFormData({ ...formData, [name]: value });
+    
+    if (value) {
+      const measurement = helmetMeasurements.find(m => m.name === name);
+      if (measurement) {
+        const numericValue = parseFloat(value);
+        if (numericValue < measurement.min || numericValue > measurement.max) {
+          setErrors({
+            ...errors,
+            [name]: `Value must be between ${measurement.min} and ${measurement.max} cm`,
+          });
+        } else {
+          setErrors({ ...errors, [name]: null });
         }
-    };
+      }
+    } else {
+      setErrors({ ...errors, [name]: null });
+    }
+  };
 
-    useEffect(() => {
-        if (containerRef.current) {
-            gsap.fromTo(
-                containerRef.current,
-                { y: 50, opacity: 0 },
-                { y: 0, opacity: 1, duration: 1, ease: "power2.out" }
-            );
-        }
-    }, []);
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (Object.values(errors).some(error => error)) {
+      alert("Please correct the errors before submitting.");
+      return;
+    }
+    
+    if (!orderNumber.trim()) {
+      alert("Please enter an order number.");
+      return;
+    }
+    
+    if (!ebayUsername.trim()) {
+      alert("Please enter an eBay username.");
+      return;
+    }
+    
+    const completedMeasurements = Object.values(formData).filter(Boolean).length;
+    if (completedMeasurements < helmetMeasurements.length) {
+      alert(`Please complete all measurements before submitting. You have completed ${completedMeasurements} of ${helmetMeasurements.length} measurements.`);
+      return;
+    }
+    
+    if (!confirm("Are you sure you want to submit the measurements?")) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch("/api/submitMeasurement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "helmet",
+          orderNumber,
+          ebayUsername,
+          measurements: formData,
+        }),
+      });
+      
+      setIsSubmitting(false);
+      
+      if (response.ok) {
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          router.push("/");
+        }, 2000);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setSubmitError(errorData.message || "Failed to submit measurements. Please try again.");
+        setShowFailure(true);
+        setTimeout(() => setShowFailure(false), 2000);
+      }
+    } catch (error) {
+      setIsSubmitting(false);
+      setSubmitError("An error occurred. Please try again.");
+      setShowFailure(true);
+      setTimeout(() => setShowFailure(false), 2000);
+    }
+  };
 
-    return (
-        <div className="bg-gradient-to-r from-[#0f0c29] to-[#302b63] min-h-screen flex items-center justify-center">
-            {/* Navigation Bar */}
-            <nav className="fixed top-0 left-0 right-0 bg-gray-900/80 backdrop-blur-md p-4 z-50">
-                <div className="container mx-auto flex items-center justify-between">
-                    <button
-                        onClick={() => router.back()}
-                        className="flex items-center px-4 py-2 text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-                    >
-                        <span className="mr-2">←</span> Back
-                    </button>
-                    <h1 className="text-2xl font-bold text-white">Helmet Measurements</h1>
-                    <div className="w-24"></div>
-                </div>
-            </nav>
-
-            {isSubmitting && <LoadingSpinner />}
-            {showSuccess && <SuccessAnimation />}
-            {showFailure && <FailureAnimation />}
-            
-            <div
-                ref={containerRef}
-                className="container mx-auto p-8 bg-gray-900/80 backdrop-blur-md rounded-xl shadow-2xl mt-20"
-            >
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                        <div>
-                            <label className="block font-semibold text-gray-300 mb-2">Order Number</label>
-                            <input
-                                type="text"
-                                value={orderNumber}
-                                onChange={(e) => setOrderNumber(e.target.value)}
-                                className="w-full p-3 rounded-lg border border-gray-600 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block font-semibold text-gray-300 mb-2">eBay Username</label>
-                            <input
-                                type="text"
-                                value={ebayUsername}
-                                onChange={(e) => setEbayUsername(e.target.value)}
-                                className="w-full p-3 rounded-lg border border-gray-600 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                        {helmetMeasurements.map((field, index) => (
-                            <div key={index} className="bg-gray-800/30 p-4 rounded-xl hover:bg-gray-800/50 transition-all duration-300">
-                                <div className="flex flex-col items-center space-y-3">
-                                    <div
-                                        className="relative w-32 h-32 group cursor-pointer"
-                                        onClick={() => setSelectedImage(field.image)}
-                                    >
-                                        <Image
-                                            src={`/images/${field.image}.png`}
-                                            alt={field.name}
-                                            fill
-                                            className="object-contain p-2 rounded-lg border border-gray-600 group-hover:border-blue-500 transition-colors"
-                                        />
-                                    </div>
-                                    <label className="text-gray-300 font-medium text-center">
-                                        {field.name}
-                                    </label>
-                                    <div className="w-full relative">
-                                        <input
-                                            type="number"
-                                            placeholder="cm"
-                                            value={formData[field.name] || ""}
-                                            onChange={(e) => handleChange(field.name, e.target.value)}
-                                            className="w-full p-3 rounded-lg border border-gray-600 bg-gray-800 text-white focus:ring-2 focus:ring-blue-500"
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="max-w-md mx-auto">
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className={`w-full ${
-                                isSubmitting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
-                            } text-white p-4 rounded-lg font-bold focus:ring-4 focus:ring-blue-500 transition-colors`}
-                        >
-                            {isSubmitting ? 'Submitting...' : 'Submit'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            {selectedImage && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
-                    onClick={() => setSelectedImage(null)}
-                >
-                    <Image
-                        src={`/images/${selectedImage}.png`}
-                        alt="Full-screen view"
-                        width={800}
-                        height={800}
-                        className="rounded-lg"
-                    />
-                </div>
-            )}
-        </div>
+  // Handle modal navigation
+  const handleModalNavigate = (direction: 'prev' | 'next') => {
+    if (!selectedImage) return;
+    
+    // Toggle between the two images
+    setSelectedImage(
+      selectedImage === "head_width" ? "head_circumference" : "head_width"
     );
-};
+  };
+  
+  // Calculate progress
+  const completed = Object.values(formData).filter(Boolean).length;
+  const total = helmetMeasurements.length;
+  const progress = (completed / total) * 100;
 
-export default HelmetPage;
+  return (
+    <>
+      <Header />
+      
+      <main className="min-h-screen pb-20 pt-24 relative">
+        {/* Status indicators */}
+        {isSubmitting && <LoadingSpinner />}
+        {showSuccess && <SuccessAnimation />}
+        {showFailure && <FailureAnimation message={submitError} />}
+        
+        {/* Background elements */}
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute inset-0" style={{background: 'var(--background)'}} />
+          
+          <div 
+            className="absolute top-0 right-0 h-[40%] w-[80%] rounded-full opacity-10"
+            style={{
+              background: 'var(--gradient-primary)',
+              filter: 'blur(140px)'
+            }}
+          />
+          
+          <div 
+            className="absolute bottom-0 left-0 h-[40%] w-[60%] rounded-full opacity-10"
+            style={{
+              background: 'var(--gradient-secondary)',
+              filter: 'blur(120px)'
+            }}
+          />
+        </div>
+        
+        {/* Page header */}
+        <div className="container mx-auto px-4 mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col items-center text-center mb-8"
+          >
+            <Badge variant="primary" size="md" className="mb-3">PRÄZISION</Badge>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              Kopf<GradientText>messungen</GradientText>
+            </h1>
+            <p className="text-foreground-secondary max-w-2xl">
+              Bitte messen Sie Ihren Kopf genau nach den folgenden Anweisungen für einen perfekten Helm-Sitz.
+            </p>
+          </motion.div>
+          
+          {/* Progress bar */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="max-w-2xl mx-auto mb-12"
+          >
+            <div className="flex justify-between mb-2 text-sm">
+              <span className="text-foreground-secondary">{completed} of {total} completed</span>
+              <span className="font-medium">{Math.round(progress)}%</span>
+            </div>
+            
+            <div className="h-2 w-full bg-surface-secondary rounded-full overflow-hidden">
+              <motion.div 
+                className="h-full rounded-full"
+                style={{ background: 'var(--gradient-primary)' }}
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+          </motion.div>
+        </div>
+        
+        {/* Main content */}
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="max-w-4xl mx-auto glass rounded-3xl shadow-3d overflow-hidden border border-border"
+          >
+            {/* Order information section */}
+            <div className="p-8 border-b" style={{borderColor: 'var(--border)', background: 'var(--surface)'}}>
+              <h3 className="text-xl font-semibold mb-6 flex items-center">
+                <Info size={18} className="mr-2 text-primary" />
+                Order Information
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+                <FormInput
+                  id="order-number"
+                  label="Order Number"
+                  value={orderNumber}
+                  onChange={setOrderNumber}
+                  placeholder="Enter your order number"
+                  required
+                />
+                
+                <FormInput
+                  id="ebay-username"
+                  label="eBay Username"
+                  value={ebayUsername}
+                  onChange={setEbayUsername}
+                  placeholder="Enter your eBay username"
+                  required
+                />
+              </div>
+            </div>
+            
+            {/* Measurements section */}
+            <form onSubmit={handleSubmit} className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Map through both measurements */}
+                {helmetMeasurements.map((measurement, index) => (
+                  <motion.div 
+                    key={measurement.name}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 + (index * 0.1) }}
+                  >
+                    <MeasurementCard
+                      name={measurement.name}
+                      image={measurement.image}
+                      value={formData[measurement.name] || ""}
+                      onChange={(value) => handleChange(measurement.name, value)}
+                      description={measurement.description}
+                      min={measurement.min}
+                      max={measurement.max}
+                      error={errors[measurement.name]}
+                      onClick={() => setSelectedImage(measurement.image)}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+              
+              {/* Error message */}
+              {submitError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-8 p-4 rounded-xl border border-error/20 bg-error/5 text-error text-center"
+                >
+                  {submitError}
+                </motion.div>
+              )}
+              
+              {/* Enhanced submit button */}
+              <motion.div 
+                className="mt-12 flex flex-col items-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <motion.button
+                  type="submit"
+                  disabled={isSubmitting || Object.values(errors).some(error => error) || Object.values(formData).filter(Boolean).length < helmetMeasurements.length || !orderNumber.trim() || !ebayUsername.trim()}
+                  className="btn-primary px-10 py-4 rounded-xl font-bold shadow-lg text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full max-w-md"
+                  whileHover={Object.values(formData).filter(Boolean).length === helmetMeasurements.length ? { y: -5, scale: 1.05 } : {}}
+                  whileTap={Object.values(formData).filter(Boolean).length === helmetMeasurements.length ? { y: 0, scale: 0.98 } : {}}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                >
+                  <span className="flex items-center gap-3 justify-center">
+                    {isSubmitting ? (
+                      <>
+                        <LoadingSpinner fullScreen={false} size="sm" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save size={20} strokeWidth={2} />
+                        <span>SUBMIT ALL MEASUREMENTS</span>
+                      </>
+                    )}
+                  </span>
+                </motion.button>
+                
+                {/* Submit status message */}
+                {Object.values(formData).filter(Boolean).length < helmetMeasurements.length && (
+                  <div className="mt-3 text-sm text-warning bg-warning/10 px-4 py-2 rounded-lg">
+                    <span className="flex items-center gap-1">
+                      <Info size={14} />
+                      Complete all {helmetMeasurements.length} measurements to enable submission 
+                      ({Object.values(formData).filter(Boolean).length}/{helmetMeasurements.length} completed)
+                    </span>
+                  </div>
+                )}
+                
+                {!orderNumber.trim() && (
+                  <div className="mt-2 text-sm text-warning">Order number is required</div>
+                )}
+                
+                {!ebayUsername.trim() && (
+                  <div className="mt-2 text-sm text-warning">eBay username is required</div>
+                )}
+              </motion.div>
+            </form>
+          </motion.div>
+        </div>
+        
+        {/* Measurement image modal */}
+        <MeasurementModal
+          isOpen={!!selectedImage}
+          onClose={() => setSelectedImage(null)}
+          selectedImage={selectedImage || ""}
+          measurements={helmetMeasurements.map(m => ({ name: m.name, image: m.image }))}
+          onNavigate={handleModalNavigate}
+        />
+      </main>
+      
+      <Footer />
+    </>
+  );
+}

@@ -1,12 +1,19 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
-import gsap from "gsap";
-import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import { ThemeContext } from "@/app/layout";
+import { Header } from "@/app/components/Header";
+import { Footer } from "@/app/components/Footer";
+import { MeasurementCard } from "@/app/components/MeasurementCard";
+import { MeasurementModal } from "@/app/components/MeasurementModal";
+import { FormInput } from "@/app/components/FormInput";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import SuccessAnimation from "@/app/components/SuccessAnimation";
 import FailureAnimation from "@/app/components/FailureAnimation";
+import { GradientText, Badge } from "@/app/utils/ui";
+import { Info, ChevronRight, Save } from "lucide-react";
 
 // Measurement descriptions for tooltips
 const measurementDescriptions = {
@@ -48,12 +55,6 @@ const measurementRanges = {
   "Fußlänge (Foot Length)": { min: 20, max: 40 },
 };
 
-// Type for measurement ranges
-interface MeasurementRange {
-  min: number;
-  max: number;
-}
-
 // Measurement groups
 const measurementGroups = {
   "Full Body": ["Gesamthöhe (Total Height)"],
@@ -80,10 +81,10 @@ const measurementGroups = {
 // Type for form data and errors
 type MeasurementKey = keyof typeof measurementRanges;
 interface FormData {
-  [key: MeasurementKey]: string;
+  [key: string]: string;
 }
 interface Errors {
-  [key: MeasurementKey]: string | null;
+  [key: string]: string | null;
 }
 
 const measurementsList = [
@@ -105,20 +106,25 @@ const measurementsList = [
   { name: "Fußlänge (Foot Length)", image: "foot_length" },
 ] as const;
 
-// Define MeasurementPage as a client component without props
-const MeasurementPage = () => {
+export default function MeasurementPage() {
   const router = useRouter();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const { resolvedTheme } = useContext(ThemeContext);
+  
+  // Form state
   const [formData, setFormData] = useState<FormData>({});
   const [errors, setErrors] = useState<Errors>({});
   const [orderNumber, setOrderNumber] = useState<string>("");
   const [ebayUsername, setEbayUsername] = useState<string>("");
+  
+  // UI state
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const [showFailure, setShowFailure] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>(Object.keys(measurementGroups)[0]);
 
+  // Handle measurement input change
   const handleChange = (name: MeasurementKey, value: string) => {
     setFormData({ ...formData, [name]: value });
     if (value) {
@@ -135,16 +141,32 @@ const MeasurementPage = () => {
     }
   };
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Validate form
     if (Object.values(errors).some((error) => error)) {
       alert("Please correct the errors before submitting.");
       return;
     }
+    
+    if (!orderNumber.trim()) {
+      alert("Please enter an order number.");
+      return;
+    }
+    
+    if (!ebayUsername.trim()) {
+      alert("Please enter an eBay username.");
+      return;
+    }
+    
     if (!confirm("Are you sure you want to submit the measurements?")) {
       return;
     }
+    
     setIsSubmitting(true);
+    
     try {
       const response = await fetch("/api/submitMeasurement", {
         method: "POST",
@@ -156,239 +178,353 @@ const MeasurementPage = () => {
           measurements: formData,
         }),
       });
+      
       setIsSubmitting(false);
+      
       if (response.ok) {
         setShowSuccess(true);
-        setTimeout(() => router.push("/"), 1000);
+        setTimeout(() => {
+          setShowSuccess(false);
+          router.push("/");
+        }, 2000);
       } else {
-        setSubmitError("Failed to submit measurements. Please try again.");
+        const errorData = await response.json();
+        setSubmitError(errorData.message || "Failed to submit measurements. Please try again.");
         setShowFailure(true);
-        setTimeout(() => setShowFailure(false), 1500);
+        setTimeout(() => setShowFailure(false), 2000);
       }
     } catch (error) {
       setIsSubmitting(false);
       setSubmitError("An error occurred. Please try again.");
       setShowFailure(true);
-      setTimeout(() => setShowFailure(false), 1500);
+      setTimeout(() => setShowFailure(false), 2000);
     }
   };
 
-  useEffect(() => {
-    if (containerRef.current) {
-      gsap.fromTo(
-        containerRef.current,
-        { y: 50, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1, ease: "power2.out" }
-      );
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!selectedImage) return;
-      const currentIndex = measurementsList.findIndex((m) => m.image === selectedImage);
-      if (e.key === "ArrowRight") {
-        const nextIndex = (currentIndex + 1) % measurementsList.length;
-        setSelectedImage(measurementsList[nextIndex].image);
-      } else if (e.key === "ArrowLeft") {
-        const prevIndex = (currentIndex - 1 + measurementsList.length) % measurementsList.length;
-        setSelectedImage(measurementsList[prevIndex].image);
-      } else if (e.key === "Escape") {
-        setSelectedImage(null);
-      }
-    };
-    if (selectedImage) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedImage]);
-
+  // Calculate progress
   const completed = Object.values(formData).filter((value) => value).length;
   const total = measurementsList.length;
+  const progress = total > 0 ? (completed / total) * 100 : 0;
+
+  // Handle modal navigation
+  const handleModalNavigate = (direction: 'prev' | 'next') => {
+    if (!selectedImage) return;
+    
+    const currentIndex = measurementsList.findIndex((m) => m.image === selectedImage);
+    if (direction === 'next') {
+      const nextIndex = (currentIndex + 1) % measurementsList.length;
+      setSelectedImage(measurementsList[nextIndex].image);
+    } else {
+      const prevIndex = (currentIndex - 1 + measurementsList.length) % measurementsList.length;
+      setSelectedImage(measurementsList[prevIndex].image);
+    }
+  };
+
+  // Animation variants
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (index: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: index * 0.05,
+        duration: 0.5,
+        ease: [0.25, 0.1, 0.25, 1],
+      },
+    }),
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-[#0f0c29] to-[#302b63]">
-      {isSubmitting && <LoadingSpinner />}
-      {showSuccess && <SuccessAnimation />}
-      {showFailure && <FailureAnimation />}
-
-      <nav className="fixed top-0 left-0 right-0 bg-gray-900/80 backdrop-blur-md p-4 z-50">
-        <div className="container mx-auto flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center px-4 py-2 text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <span className="mr-2">←</span> Back
-          </button>
-          <h1 className="text-2xl font-bold text-white">Full Body Suit Measurements</h1>
-          <div className="w-24"></div>
+    <>
+      <Header />
+      
+      <main className="min-h-screen pb-20 pt-24 relative">
+        {/* Status indicators */}
+        {isSubmitting && <LoadingSpinner />}
+        {showSuccess && <SuccessAnimation />}
+        {showFailure && <FailureAnimation message={submitError} />}
+        
+        {/* Background elements */}
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute inset-0" style={{background: 'var(--background)'}} />
+          
+          <div 
+            className="absolute top-0 right-0 h-[40%] w-[80%] rounded-full opacity-10"
+            style={{
+              background: 'var(--gradient-primary)',
+              filter: 'blur(140px)'
+            }}
+          />
+          
+          <div 
+            className="absolute bottom-0 left-0 h-[40%] w-[60%] rounded-full opacity-10"
+            style={{
+              background: 'var(--gradient-secondary)',
+              filter: 'blur(120px)'
+            }}
+          />
         </div>
-      </nav>
-
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        <div
-          ref={containerRef}
-          className="max-w-7xl mx-auto bg-gray-900/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden"
-        >
-          <div className="bg-gray-800/50 p-6 border-b border-gray-700">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Order Number</label>
-                <input
-                  type="text"
+        
+        {/* Page header */}
+        <div className="container mx-auto px-4 mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col items-center text-center mb-8"
+          >
+            <Badge variant="primary" size="md" className="mb-3">PRÄZISION</Badge>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              Full Body <GradientText>Measurements</GradientText>
+            </h1>
+            <p className="text-foreground-secondary max-w-2xl">
+              Please provide accurate measurements for your custom suit. Click on images for detailed instructions.
+            </p>
+          </motion.div>
+          
+          {/* Progress bar */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="max-w-2xl mx-auto mb-12"
+          >
+            <div className="flex justify-between mb-2 text-sm">
+              <span className="text-foreground-secondary">{completed} of {total} completed</span>
+              <span className="font-medium">{Math.round(progress)}%</span>
+            </div>
+            
+            <div className="h-2 w-full bg-surface-secondary rounded-full overflow-hidden">
+              <motion.div 
+                className="h-full rounded-full"
+                style={{ background: 'var(--gradient-primary)' }}
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+          </motion.div>
+        </div>
+        
+        {/* Main content */}
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="max-w-7xl mx-auto glass rounded-3xl shadow-3d overflow-hidden border border-border"
+          >
+            {/* Order information section */}
+            <div className="p-8 border-b" style={{borderColor: 'var(--border)', background: 'var(--surface)'}}>
+              <h3 className="text-xl font-semibold mb-6 flex items-center">
+                <Info size={18} className="mr-2 text-primary" />
+                Order Information
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+                <FormInput
+                  id="order-number"
+                  label="Order Number"
                   value={orderNumber}
-                  onChange={(e) => setOrderNumber(e.target.value)}
-                  className="w-full p-3 rounded-lg border border-gray-600 bg-gray-800/90 text-white focus:ring-2 focus:ring-blue-500 focus:scale-105 transition-all"
+                  onChange={setOrderNumber}
+                  placeholder="Enter your order number"
                   required
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">eBay Username</label>
-                <input
-                  type="text"
+                
+                <FormInput
+                  id="ebay-username"
+                  label="eBay Username"
                   value={ebayUsername}
-                  onChange={(e) => setEbayUsername(e.target.value)}
-                  className="w-full p-3 rounded-lg border border-gray-600 bg-gray-800/90 text-white focus:ring-2 focus:ring-blue-500 focus:scale-105 transition-all"
+                  onChange={setEbayUsername}
+                  placeholder="Enter your eBay username"
                   required
                 />
               </div>
             </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="p-6">
-            <div className="w-full bg-gray-700 rounded-full h-2.5 mb-4">
-              <div
-                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                style={{ width: `${(completed / total) * 100}%` }}
-              ></div>
-            </div>
-            {Object.entries(measurementGroups).map(([group, measurements]) => (
-              <div key={group} className="mb-8">
-                <h2 className="text-xl font-bold text-white mb-4">{group}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {measurements.map((measurement) => {
-                    const field = measurementsList.find((m) => m.name === measurement)!;
-                    return (
-                      <div
-                        key={field.name}
-                        className="bg-gray-800/30 p-4 rounded-xl hover:bg-gray-800/50 hover:scale-105 transition-all duration-300"
-                      >
-                        <div className="flex flex-col items-center space-y-3">
-                          <div
-                            className="relative w-24 h-24 md:w-32 md:h-32 group cursor-pointer"
-                            onClick={() => setSelectedImage(field.image)}
-                          >
-                            <Image
-                              src={`/images/${field.image}.png`}
-                              alt={field.name}
-                              fill
-                              className="object-contain p-2 rounded-lg border border-gray-600 group-hover:border-blue-500 transition-colors"
-                            />
-                          </div>
-                          <Tooltip text={measurementDescriptions[field.name]}>
-                            <label className="text-gray-300 font-medium text-center">{field.name}</label>
-                          </Tooltip>
-                          <div className="w-full relative">
-                            <input
-                              type="number"
-                              placeholder="cm"
-                              value={formData[field.name] || ""}
-                              onChange={(e) => handleChange(field.name, e.target.value)}
-                              className="w-full p-2 rounded-lg border border-gray-600 bg-gray-800/90 text-white focus:ring-2 focus:ring-blue-500 focus:scale-105 transition-all duration-300"
-                              required
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">cm</span>
-                          </div>
-                          {errors[field.name] && (
-                            <p className="text-red-500 text-sm mt-1">{errors[field.name]}</p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+            
+            {/* Measurements section */}
+            <form onSubmit={handleSubmit} className="p-8">
+              {/* Group tabs */}
+              <div className="mb-8 border-b border-border">
+                <div className="flex overflow-x-auto pb-2 hide-scrollbar">
+                  {Object.keys(measurementGroups).map((group) => (
+                    <button
+                      key={group}
+                      type="button"
+                      onClick={() => setActiveTab(group)}
+                      className={`px-4 py-3 relative whitespace-nowrap font-medium text-sm transition-colors ${
+                        activeTab === group
+                          ? "text-primary"
+                          : "text-foreground-secondary hover:text-foreground"
+                      }`}
+                    >
+                      {group}
+                      {activeTab === group && (
+                        <motion.div
+                          layoutId="activeTab"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        />
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
-            ))}
-            {submitError && <p className="text-red-500 text-center mt-4">{submitError}</p>}
-            <div className="mt-8 flex justify-center">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              
+              {/* Active group measurements */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {measurementGroups[activeTab].map((measurement, index) => {
+                      const field = measurementsList.find((m) => m.name === measurement);
+                      if (!field) return null;
+                      
+                      return (
+                        <motion.div
+                          key={field.name}
+                          custom={index}
+                          variants={cardVariants}
+                          initial="hidden"
+                          animate="visible"
+                        >
+                          <MeasurementCard
+                            name={field.name}
+                            image={field.image}
+                            value={formData[field.name] || ""}
+                            onChange={(value) => handleChange(field.name as MeasurementKey, value)}
+                            description={measurementDescriptions[field.name]}
+                            min={measurementRanges[field.name].min}
+                            max={measurementRanges[field.name].max}
+                            error={errors[field.name]}
+                            onClick={() => setSelectedImage(field.image)}
+                          />
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+              
+              {/* Error message */}
+              {submitError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-8 p-4 rounded-xl border border-error/20 bg-error/5 text-error text-center"
+                >
+                  {submitError}
+                </motion.div>
+              )}
+              
+              {/* Submit button */}
+              <motion.div 
+                className="mt-12 flex justify-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
               >
-                {isSubmitting ? (
-                  <>
-                    <LoadingSpinner />
-                    <span>Submitting...</span>
-                  </>
-                ) : (
-                  <span>Submit Measurements</span>
-                )}
-              </button>
-            </div>
-          </form>
+                <motion.button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-primary px-10 py-4 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  whileHover={{ y: -5 }}
+                  whileTap={{ y: 0 }}
+                >
+                  <span className="flex items-center gap-2">
+                    {isSubmitting ? (
+                      <>
+                        <LoadingSpinner fullScreen={false} size="sm" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save size={18} />
+                        <span>Submit Measurements</span>
+                      </>
+                    )}
+                  </span>
+                </motion.button>
+              </motion.div>
+              
+              {/* Navigation */}
+              <div className="mt-8 flex justify-center space-x-4">
+                {Object.keys(measurementGroups).map((group, index) => {
+                  const isActive = activeTab === group;
+                  const isCompleted = measurementGroups[group].every(
+                    (measurement) => formData[measurement]
+                  );
+                  
+                  return (
+                    <motion.button
+                      key={group}
+                      type="button"
+                      onClick={() => setActiveTab(group)}
+                      className={`w-3 h-3 rounded-full transition-all ${
+                        isActive
+                          ? "bg-primary scale-125"
+                          : isCompleted
+                          ? "bg-primary/50"
+                          : "bg-foreground-secondary/30"
+                      }`}
+                      whileHover={{ scale: 1.2 }}
+                    />
+                  );
+                })}
+              </div>
+              
+              {/* Next group button */}
+              {activeTab !== Object.keys(measurementGroups)[Object.keys(measurementGroups).length - 1] && (
+                <div className="mt-8 flex justify-center">
+                  <motion.button
+                    type="button"
+                    onClick={() => {
+                      const groupKeys = Object.keys(measurementGroups);
+                      const currentIndex = groupKeys.indexOf(activeTab);
+                      if (currentIndex < groupKeys.length - 1) {
+                        setActiveTab(groupKeys[currentIndex + 1]);
+                      }
+                    }}
+                    className="flex items-center gap-1 text-primary text-sm font-medium"
+                    whileHover={{ x: 5 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                  >
+                    <span>Next group</span>
+                    <ChevronRight size={16} />
+                  </motion.button>
+                </div>
+              )}
+            </form>
+          </motion.div>
         </div>
+        
+        {/* Measurement image modal */}
+        <MeasurementModal
+          isOpen={!!selectedImage}
+          onClose={() => setSelectedImage(null)}
+          selectedImage={selectedImage || ""}
+          measurements={measurementsList}
+          onNavigate={handleModalNavigate}
+        />
+        
+        {/* Custom scrollbar styles */}
+        <style jsx global>{`
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
       </main>
-
-      {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
-          onClick={(e) => e.target === e.currentTarget && setSelectedImage(null)}
-        >
-          <button
-            onClick={() => {
-              const currentIndex = measurementsList.findIndex((m) => m.image === selectedImage);
-              const prevIndex = (currentIndex - 1 + measurementsList.length) % measurementsList.length;
-              setSelectedImage(measurementsList[prevIndex].image);
-            }}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-800 p-2 rounded-full text-white hover:bg-gray-700"
-          >
-            ←
-          </button>
-          <Image
-            src={`/images/${selectedImage}.png`}
-            alt="Full-screen view"
-            width={800}
-            height={800}
-            className="rounded-lg"
-          />
-          <button
-            onClick={() => {
-              const currentIndex = measurementsList.findIndex((m) => m.image === selectedImage);
-              const nextIndex = (currentIndex + 1) % measurementsList.length;
-              setSelectedImage(measurementsList[nextIndex].image);
-            }}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-800 p-2 rounded-full text-white hover:bg-gray-700"
-          >
-            →
-          </button>
-        </div>
-      )}
-    </div>
+      
+      <Footer />
+    </>
   );
-};
-
-interface TooltipProps {
-  children: React.ReactNode;
-  text: string;
 }
-
-const Tooltip = ({ children, text }: TooltipProps) => {
-  const [show, setShow] = useState<boolean>(false);
-  return (
-    <div
-      className="relative"
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-    >
-      {children}
-      {show && (
-        <div className="absolute z-10 p-2 text-sm text-white bg-gray-800 rounded shadow-lg -top-12 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-          {text}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default MeasurementPage;

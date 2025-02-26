@@ -29,6 +29,12 @@ A Next.js application for managing and processing measurement submissions with G
   - Professional HTML email templates
   - Confirmation emails for submissions
   - Error handling and logging
+  
+- **Admin Panel**
+  - Secure authentication system
+  - Protected admin routes
+  - Measurement statistics dashboard
+  - User-friendly interface
 
 ## 🛠️ Technical Implementation
 
@@ -85,7 +91,16 @@ GOOGLE_PRIVATE_KEY=your_private_key
 EMAIL_USER=your_gmail
 EMAIL_APP_PASSWORD=your_app_specific_password
 EMAIL_RECIPIENT=recipient_email
+ADMIN_USERNAME=your_admin_username
+ADMIN_PASSWORD_HASH=your_admin_password_hash
 ```
+
+### Admin Authentication Setup
+```bash
+# Set up admin credentials
+npm run setup-admin
+```
+This interactive script will prompt you for a username and password, then securely hash the password and add both to your `.env.local` file.
 
 ### Installation
 ```bash
@@ -175,7 +190,8 @@ Built with ❤️ using Next.js and TypeScript
 ## 📋 TODO & Future Enhancements
 
 ### Authentication & Authorization
-- [ ] Implement user authentication system
+- [x] Implement user authentication system
+- [x] Add admin authentication for secure access
 - [ ] Add role-based access control (Admin, User, Viewer)
 - [ ] Add OAuth2.0 integration for social logins
 - [ ] Implement session management
