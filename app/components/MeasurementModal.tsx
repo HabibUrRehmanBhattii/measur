@@ -143,7 +143,7 @@ export function MeasurementModal({
             {/* Image */}
             <div className="relative aspect-square w-full p-8">
               <Image
-                src={`/images/${selectedImage}.png`}
+                src={`/images/${selectedImage}`}
                 alt={currentMeasurement?.name || 'Measurement'}
                 fill
                 className="object-contain"
