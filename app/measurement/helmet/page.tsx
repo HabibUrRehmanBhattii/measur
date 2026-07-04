@@ -13,8 +13,8 @@ import { ConfirmDialog } from "@/app/components/ConfirmDialog";
 import { Save, AlertTriangle } from "lucide-react";
 
 const messungen = [
-  { name: "Kopfbreite", description: "Messen Sie die Breite Ihres Kopfes von Ohr zu Ohr.", image: "head_width" },
-  { name: "Kopfumfang", description: "Messen Sie um Ihren Kopf oberhalb der Ohren und Augenbrauen.", image: "head_circumference" },
+  { name: "Kopfbreite", description: "Messen Sie die Breite Ihres Kopfes von Ohr zu Ohr.", image: "Helmet Only/head_width.png" },
+  { name: "Kopfumfang", description: "Messen Sie um Ihren Kopf oberhalb der Ohren und Augenbrauen.", image: "Helmet Only/head_circumference.png" },
 ];
 
 export default function HelmetPage() {

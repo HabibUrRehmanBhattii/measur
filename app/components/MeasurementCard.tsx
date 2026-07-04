@@ -61,7 +61,7 @@ export function MeasurementCard({
             transition={{ duration: 0.3 }}
           >
             <Image
-              src={`/images/${image}.png`}
+              src={`/images/${image}`}
               alt={name}
               fill
               className="object-contain p-2"
