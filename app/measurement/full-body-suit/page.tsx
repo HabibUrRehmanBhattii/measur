@@ -233,10 +233,10 @@ export default function FullBodySuitPage() {
         <div className="max-w-7xl mx-auto px-4 mb-10">
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight uppercase">
-              Full Body Suit <span className="text-crawl">Configuration</span>
+              Ganzkörperanzug <span className="text-crawl">Konfiguration</span>
             </h1>
             <p className="font-data text-sm text-foreground-secondary mt-2">
-              Precision measurement · 16 data points · Millimeter-accurate
+              Präzisionsmessung · 16 Datenfelder · Millimetergenau
             </p>
           </motion.div>
         </div>
@@ -286,11 +286,11 @@ export default function FullBodySuitPage() {
               <div className="border border-[var(--border)] rounded-sm p-6 mb-6 bg-[var(--surface-elevated)]">
                 <h3 className="font-data text-xs uppercase tracking-atelier text-foreground-secondary mb-4 flex items-center gap-2">
                   <span className="w-1 h-1 rounded-full bg-[var(--primary)]" />
-                  PILOT DATA
+                  PILOTEN-DATEN
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormInput id="order-number" label="Order Ref. (optional)" value={orderNumber} onChange={setOrderNumber} placeholder="e.g. FB-12345" />
-                  <FormInput id="ebay-username" label="eBay Username" value={ebayUsername} onChange={setEbayUsername} placeholder="eBay username" required />
+                  <FormInput id="order-number" label="Bestell-Nr. (optional)" value={orderNumber} onChange={setOrderNumber} placeholder="z.B. FB-12345" />
+                  <FormInput id="ebay-username" label="eBay-Benutzername" value={ebayUsername} onChange={setEbayUsername} placeholder="eBay Benutzername" required />
                 </div>
               </div>
 
@@ -347,13 +347,13 @@ export default function FullBodySuitPage() {
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="font-data text-xs text-foreground-secondary">
                     <span className="text-foreground font-bold">{filledCount}</span>/{total} Messwerte
-                    {filledCount < total && <span className="text-foreground-secondary/60"> — optional remaining</span>}
+                    {filledCount < total && <span className="text-foreground-secondary/60"> — optional verbleibend</span>}
                   </div>
 
                   <div className="flex items-center gap-3">
                     {!ebayUsername.trim() && (
                       <span className="font-data text-[11px] text-[var(--warning)] flex items-center gap-1">
-                        <AlertTriangle size={12} /> eBay Username required
+                        <AlertTriangle size={12} /> eBay-Benutzername erforderlich
                       </span>
                     )}
                     <motion.button
@@ -371,7 +371,7 @@ export default function FullBodySuitPage() {
                       {isSubmitting ? (
                         <><LoadingSpinner fullScreen={false} size="sm" /><span>Übertrage...</span></>
                       ) : (
-                        <><Save size={16} /><span>{isComplete ? "Complete Configuration" : "Transmit Data"}</span></>
+                        <><Save size={16} /><span>{isComplete ? "Konfiguration abschließen" : "Daten senden"}</span></>
                       )}
                     </motion.button>
                   </div>

@@ -13,10 +13,10 @@ interface SuccessAnimationProps {
 }
 
 export default function SuccessAnimation({
-  message = "Transmission Complete",
-  subMessage = "Data received by Imperial Command.",
+  message = "Übertragung abgeschlossen",
+  subMessage = "Daten erfolgreich empfangen.",
   onComplete,
-  redirectText = "Return",
+  redirectText = "Zurück",
   onRedirect,
 }: SuccessAnimationProps) {
   const [transferProgress, setTransferProgress] = useState(0);

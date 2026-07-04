@@ -123,7 +123,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme={resolvedTheme}>
       <head>
-        <title>Measeurment - Precision Measurement System</title>
+        <title>MEASUR — Präzisionsmessung</title>
         <meta name="description" content="Advanced body measurement system for precision fits" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

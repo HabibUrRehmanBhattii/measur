@@ -43,19 +43,19 @@ export default function HomePage() {
             >
               <div className="font-data text-[11px] uppercase tracking-atelier text-[var(--signal)] mb-4 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--signal)] animate-pulse-gentle" />
-                IMPERIAL MEASUREMENT BUREAU
+                IMPERIAL MESSBÜRO
               </div>
 
               <h1 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tight leading-[0.95] mb-6">
-                <span className="text-crawl">Precision</span>
+                <span className="text-crawl">Präzision</span>
                 <br />
-                Beyond the
+                Jenseits der
                 <br />
-                <span className="text-[var(--primary)]">Galaxy</span>
+                <span className="text-[var(--primary)]">Galaxie</span>
               </h1>
 
               <p className="font-data text-sm md:text-base text-foreground-secondary max-w-lg mb-10 leading-relaxed">
-                Bespoke suit configuration for the discerning pilot. Millimeter-accurate. Empire-tested. Forged in the stars.
+                Maßgeschneiderte Anzug-Konfiguration für den anspruchsvollen Piloten. Millimetergenau. Empire-getestet. Geschmiedet in den Sternen.
               </p>
 
               {/* Structural CTA panels */}
@@ -67,7 +67,7 @@ export default function HomePage() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <span className="relative z-10 flex items-center gap-3 font-display text-sm uppercase tracking-wider text-[var(--primary)]">
-                    Full Body Suit
+                    Ganzkörperanzug
                     <ArrowRight size={16} />
                   </span>
                 </motion.button>
@@ -79,7 +79,7 @@ export default function HomePage() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <span className="flex items-center gap-3 font-display text-sm uppercase tracking-wider text-foreground-secondary">
-                    Helmet
+                    Helm
                     <ArrowRight size={16} />
                   </span>
                 </motion.button>
@@ -109,19 +109,19 @@ export default function HomePage() {
               className="mb-12"
             >
               <div className="font-data text-[11px] uppercase tracking-atelier text-foreground-secondary mb-2">
-                TECHNICAL SPECIFICATIONS
+                TECHNISCHE DATEN
               </div>
               <h2 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight">
-                Engineered for the <span className="text-crawl">Cosmos</span>
+                Für den Kosmos <span className="text-crawl">entwickelt</span>
               </h2>
             </motion.div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[var(--border)] rounded-sm overflow-hidden">
               {[
-                { icon: <Crosshair size={20} />, label: "16 Data Points", desc: "Millimeter-accurate acquisition" },
-                { icon: <Target size={20} />, label: "±2mm Tolerance", desc: "Fighter-pilot precision" },
-                { icon: <Zap size={20} />, label: "Real-time Validation", desc: "Instant feedback loop" },
-                { icon: <ShieldCheck size={20} />, label: "Encrypted Transfer", desc: "Imperial-grade security" },
+                { icon: <Crosshair size={20} />, label: "16 Datenfelder", desc: "Millimetergenaue Erfassung" },
+                { icon: <Target size={20} />, label: "±2 mm Toleranz", desc: "Rennsport-Präzision" },
+                { icon: <Zap size={20} />, label: "Echtzeit-Prüfung", desc: "Sofortige Rückmeldung" },
+                { icon: <ShieldCheck size={20} />, label: "Verschlüsselt", desc: "Sichere Übertragung" },
               ].map((spec, i) => (
                 <motion.div
                   key={spec.label}
@@ -151,18 +151,18 @@ export default function HomePage() {
               className="mb-12"
             >
               <div className="font-data text-[11px] uppercase tracking-atelier text-foreground-secondary mb-2">
-                PILOT TESTIMONIALS
+                REFERENZEN
               </div>
               <h2 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight">
-                Trusted by the <span className="text-crawl">Alliance</span>
+                Vertrauen der <span className="text-crawl">Allianz</span>
               </h2>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl">
               {[
-                { quote: "The precision of this suit configuration changed my entire approach to racing.", author: "Wedge A.", role: "Red Squadron Leader" },
-                { quote: "Flawless process, exact results. The Force is strong with this one.", author: "Leia O.", role: "General, Rebel Alliance" },
-                { quote: "Detail accuracy and rapid processing — exceeded every expectation.", author: "Han S.", role: "Smuggler Extraordinaire" },
+                { quote: "Die Messgenauigkeit hat die Passform meines Anzugs revolutioniert.", author: "Wedge A.", role: "Red Squadron Leader" },
+                { quote: "Reibungsloser Prozess, präzise Ergebnisse. Absolut überzeugend.", author: "Leia O.", role: "General, Rebel Alliance" },
+                { quote: "Detailgenauigkeit und schnelle Verarbeitung — übertroffen alle Erwartungen.", author: "Han S.", role: "Schmuggler" },
               ].map((t, i) => (
                 <motion.div
                   key={t.author}
@@ -195,13 +195,13 @@ export default function HomePage() {
               transition={{ duration: 0.5 }}
             >
               <div className="font-data text-[11px] uppercase tracking-atelier text-[var(--signal)] mb-4">
-                BEGIN YOUR MISSION
+                STARTEN SIE JETZT
               </div>
               <h2 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight mb-4">
-                Ready for <span className="text-crawl">Launch</span>?
+                Bereit für <span className="text-crawl">den Start</span>?
               </h2>
               <p className="font-data text-sm text-foreground-secondary mb-8 max-w-lg mx-auto">
-                Configure your suit or helmet — precision-crafted in minutes, built to last light-years.
+                Wählen Sie zwischen Ganzkörperanzug oder Helm — millimetergenaue Konfiguration in wenigen Minuten.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <motion.button

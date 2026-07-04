@@ -48,7 +48,7 @@ export default function SuitScene3D({ className = "" }) {
       <div ref={containerRef} className="w-full h-full">
         {!loaded && (
           <div className="w-full h-full flex items-center justify-center">
-            <div className="font-data text-xs text-foreground-secondary animate-pulse">Loading 3D viewer...</div>
+            <div className="font-data text-xs text-foreground-secondary animate-pulse">3D-Modell wird geladen...</div>
           </div>
         )}
       </div>

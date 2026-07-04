@@ -24,8 +24,8 @@ export function Header() {
 
   const navItems = [
     { label: "HOME", href: "/" },
-    { label: "SUIT CONFIG", href: "/measurement/full-body-suit" },
-    { label: "HELMET", href: "/measurement/helmet" },
+    { label: "ANZUG", href: "/measurement/full-body-suit" },
+    { label: "HELM", href: "/measurement/helmet" },
   ];
 
   return (
@@ -66,7 +66,7 @@ export function Header() {
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--signal)] animate-pulse-gentle" />
                   <span className="font-data text-[9px] uppercase tracking-atelier text-foreground-secondary">
-                    SYSTEMS ONLINE
+                    SYSTEM AKTIV
                   </span>
                 </div>
               </div>
@@ -194,7 +194,7 @@ export function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="block py-2.5 px-4 rounded-sm font-data text-xs tracking-wider border border-[var(--border)] text-foreground-secondary"
                   >
-                    ADMIN
+                    Admin
                   </Link>
                 </motion.li>
               </motion.ul>
