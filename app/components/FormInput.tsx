@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Info } from 'lucide-react';
-import { cn } from '../utils/ui';
+import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import { AlertTriangle, Check } from "lucide-react";
+import { cn } from "../utils/ui";
 
 interface FormInputProps {
   id: string;
@@ -25,7 +25,7 @@ interface FormInputProps {
 export function FormInput({
   id,
   label,
-  type = 'text',
+  type = "number",
   value,
   onChange,
   placeholder,
@@ -40,118 +40,137 @@ export function FormInput({
 }: FormInputProps) {
   const [focused, setFocused] = useState(false);
   const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [justValid, setJustValid] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  
-  // Handle tooltip positioning
+
+  const isValid = value && !error;
+
+  // Flash --signal on valid entry
+  useEffect(() => {
+    if (isValid) {
+      setJustValid(true);
+      const t = setTimeout(() => setJustValid(false), 600);
+      return () => clearTimeout(t);
+    }
+  }, [isValid, value]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (tooltipRef.current && !tooltipRef.current.contains(event.target as Node)) {
         setTooltipVisible(false);
       }
     };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  
+
   return (
     <div className={cn("relative", className)}>
-      <label 
-        htmlFor={id}
-        className={cn(
-          "block text-sm font-medium mb-2 transition-colors",
-          focused ? "text-primary" : "text-foreground"
-        )}
-      >
-        {label}
-        {required && <span className="text-error ml-1">*</span>}
-        
-        {tooltip && (
-          <button
-            type="button"
-            className={cn(
-              "ml-1.5 p-0.5 rounded-full inline-flex items-center justify-center transition-colors",
-              tooltipVisible ? "text-primary bg-primary/10" : "text-foreground-secondary hover:text-primary"
-            )}
-            onClick={(e) => {
-              e.preventDefault();
-              setTooltipVisible(!tooltipVisible);
-            }}
-            aria-label="Show information"
-          >
-            <Info size={14} />
-          </button>
-        )}
-      </label>
-      
+      {/* Label row */}
+      <div className="flex items-center justify-between mb-2">
+        <label
+          htmlFor={id}
+          className={cn(
+            "font-data text-[11px] uppercase tracking-atelier transition-colors duration-200",
+            focused ? "text-[var(--signal)]" : "text-foreground-secondary"
+          )}
+        >
+          {label}
+          {required && <span className="text-[var(--error)] ml-1">*</span>}
+          {units && (
+            <span className="normal-case tracking-normal ml-1.5 text-foreground-secondary/50">
+              [{units}]
+            </span>
+          )}
+        </label>
+
+        {/* Valid tick */}
+        <motion.div
+          initial={false}
+          animate={{ opacity: justValid ? 1 : 0, scale: justValid ? 1 : 0.5 }}
+          className="text-[var(--signal)]"
+        >
+          {isValid && <Check size={14} />}
+        </motion.div>
+      </div>
+
+      {/* Input area */}
       <div className="relative">
         <input
           id={id}
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
+          placeholder={placeholder || "—"}
           required={required}
           min={min}
           max={max}
           autoComplete={autocomplete}
-          className={cn(
-            "w-full px-3 py-2.5 rounded-xl transition-all duration-200",
-            "bg-surface border border-border text-foreground dark:text-white",
-            "focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none",
-            "dark:bg-black/30 dark:border-white/20 dark:focus:border-primary-light",
-            units && "pr-10",
-            error ? "border-error focus:border-error focus:ring-error/20" : "",
-          )}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
+          className={cn(
+            "w-full bg-transparent border-b-2 pb-2.5 pt-1",
+            "font-data text-2xl tabular-nums",
+            "focus:outline-none transition-colors duration-300",
+            "placeholder:text-foreground-secondary/30",
+            "dark:text-white text-foreground",
+            error
+              ? "border-[var(--error)]"
+              : justValid
+              ? "border-[var(--signal)]"
+              : focused
+              ? "border-[var(--border-strong)]"
+              : "border-[var(--border)]"
+          )}
         />
-        
-        {units && (
-          <div 
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-secondary text-sm pointer-events-none"
-          >
-            {units}
+
+        {/* Range hint line */}
+        {!error && min !== undefined && max !== undefined && (
+          <div className="mt-1.5 flex justify-between font-data text-[9px] text-foreground-secondary/40 uppercase tracking-wider">
+            <span>min {min}</span>
+            <span>max {max}</span>
           </div>
         )}
-        
-        {/* Input validation state */}
-        {value && !error && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-success"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 0C3.6 0 0 3.6 0 8C0 12.4 3.6 16 8 16C12.4 16 16 12.4 16 8C16 3.6 12.4 0 8 0ZM7 11.4L3.6 8L5 6.6L7 8.6L11 4.6L12.4 6L7 11.4Z" fill="currentColor"/>
-            </svg>
-          </motion.div>
-        )}
       </div>
-      
-      {/* Error message */}
+
+      {/* Tooltip toggle + content */}
+      {tooltip && (
+        <div className="relative mt-2" ref={tooltipRef}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              setTooltipVisible(!tooltipVisible);
+            }}
+            className={cn(
+              "font-data text-[10px] uppercase tracking-wider transition-colors",
+              tooltipVisible ? "text-[var(--signal)]" : "text-foreground-secondary/50 hover:text-foreground-secondary"
+            )}
+          >
+            {tooltipVisible ? "▾ info" : "▸ info"}
+          </button>
+
+          {tooltipVisible && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-2 font-data text-[11px] leading-relaxed text-foreground-secondary border-l-2 border-[var(--border-strong)] pl-3"
+            >
+              {tooltip}
+            </motion.div>
+          )}
+        </div>
+      )}
+
+      {/* Error */}
       {error && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-2 text-xs text-error"
+          className="mt-2 flex items-center gap-1.5 font-data text-[11px] text-[var(--error)]"
         >
-          {error}
-        </motion.div>
-      )}
-      
-      {/* Tooltip */}
-      {tooltipVisible && tooltip && (
-        <motion.div
-          ref={tooltipRef}
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -5 }}
-          className="absolute z-10 left-0 mt-1 p-3 w-full max-w-xs bg-surface-secondary backdrop-blur-lg rounded-lg border border-border shadow-lg"
-        >
-          <div className="text-xs text-foreground-secondary">{tooltip}</div>
+          <AlertTriangle size={12} />
+          <span>{error}</span>
         </motion.div>
       )}
     </div>

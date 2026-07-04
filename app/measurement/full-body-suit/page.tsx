@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/app/components/Header";
-import { Footer } from "@/app/components/Footer";
 import { MeasurementCard } from "@/app/components/MeasurementCard";
 import { MeasurementModal } from "@/app/components/MeasurementModal";
 import { FormInput } from "@/app/components/FormInput";
@@ -12,701 +11,376 @@ import LoadingSpinner from "@/app/components/LoadingSpinner";
 import SuccessAnimation from "@/app/components/SuccessAnimation";
 import FailureAnimation from "@/app/components/FailureAnimation";
 import { ConfirmDialog } from "@/app/components/ConfirmDialog";
-import { GradientText, Badge } from "@/app/utils/ui";
-import { Info, ChevronRight, Save, Check, AlertTriangle } from "lucide-react";
+import { Check, AlertTriangle, ChevronRight, ChevronLeft, Save } from "lucide-react";
 
-// Full body measurement types with validation ranges
+/* ── measurement definitions ── */
 const measurements = [
-  {
-    name: "Gesamthöhe (Total Height)",
-    description: "Stand straight with feet together and measure from the top of your head to the floor.",
-    image: "total_height",
-    group: "Full Body",
-    min: 100,
-    max: 250,
-  },
-  {
-    name: "Brustumfang (Chest Circumference)",
-    description: "Measure around the fullest part of your chest, keeping the tape horizontal.",
-    image: "chest_circumference",
-    group: "Upper Body",
-    min: 50,
-    max: 200,
-  },
-  {
-    name: "Halskreis (Neck Circumference)",
-    description: "Measure around the base of your neck, keeping the tape snug.",
-    image: "neck_circumference",
-    group: "Upper Body",
-    min: 20,
-    max: 60,
-  },
-  {
-    name: "Schulterbreite (Shoulder Width)",
-    description: "Measure across the top of your shoulders from edge to edge.",
-    image: "shoulder_width",
-    group: "Upper Body",
-    min: 30,
-    max: 70,
-  },
-  {
-    name: "Armlänge (Arm Length)",
-    description: "Measure from the shoulder tip to the wrist with your arm slightly bent.",
-    image: "arm_length",
-    group: "Upper Body",
-    min: 40,
-    max: 100,
-  },
-  {
-    name: "Bizepsumfang (Bicep Circumference)",
-    description: "Measure around the fullest part of your bicep, flexed.",
-    image: "bicep_circumference",
-    group: "Upper Body",
-    min: 20,
-    max: 60,
-  },
-  {
-    name: "Unterarmumfang (Forearm Circumference)",
-    description: "Measure around the fullest part of your forearm.",
-    image: "forearm_circumference",
-    group: "Upper Body",
-    min: 15,
-    max: 50,
-  },
-  {
-    name: "Rückenlänge (Back Length)",
-    description: "Measure from the base of your neck to your waistline.",
-    image: "back_length",
-    group: "Upper Body",
-    min: 30,
-    max: 80,
-  },
-  {
-    name: "Taillenumfang (Waist Circumference)",
-    description: "Measure around your natural waistline, above the hips.",
-    image: "waist_circumference",
-    group: "Upper Body",
-    min: 50,
-    max: 150,
-  },
-  {
-    name: "Hüftumfang (Hip Circumference)",
-    description: "Measure around the fullest part of your hips.",
-    image: "hip_circumference",
-    group: "Lower Body",
-    min: 60,
-    max: 160,
-  },
-  {
-    name: "Innenbeinlänge (Inseam)",
-    description: "Measure from the crotch to the floor along the inside of your leg.",
-    image: "inseam",
-    group: "Lower Body",
-    min: 50,
-    max: 120,
-  },
-  {
-    name: "Oberschenkelumfang (Thigh Circumference)",
-    description: "Measure around the fullest part of your thigh.",
-    image: "thigh_circumference",
-    group: "Lower Body",
-    min: 30,
-    max: 90,
-  },
-  {
-    name: "Kalbumfang (Calf Circumference)",
-    description: "Measure around the fullest part of your calf.",
-    image: "calf_circumference",
-    group: "Lower Body",
-    min: 20,
-    max: 60,
-  },
-  {
-    name: "Reiterate (Head Width)",
-    description: "Measure the width of your head above the ears.",
-    image: "head_width",
-    group: "Head",
-    min: 10,
-    max: 30,
-  },
-  {
-    name: "Kopfumfang (Head Circumference)",
-    description: "Measure around your head above the ears and eyebrows.",
-    image: "head_circumference",
-    group: "Head",
-    min: 40,
-    max: 70,
-  },
-  {
-    name: "Fußlänge (Foot Length)",
-    description: "Measure from the heel to the tip of your longest toe.",
-    image: "foot_length",
-    group: "Feet",
-    min: 20,
-    max: 40,
-  },
+  { name: "Gesamthöhe (Total Height)", description: "Stand straight with feet together and measure from the top of your head to the floor.", image: "total_height", group: "full", min: 100, max: 250 },
+  { name: "Brustumfang (Chest Circumference)", description: "Measure around the fullest part of your chest, keeping the tape horizontal.", image: "chest_circumference", group: "upper", min: 50, max: 200 },
+  { name: "Halskreis (Neck Circumference)", description: "Measure around the base of your neck, keeping the tape snug.", image: "neck_circumference", group: "upper", min: 20, max: 60 },
+  { name: "Schulterbreite (Shoulder Width)", description: "Measure across the top of your shoulders from edge to edge.", image: "shoulder_width", group: "upper", min: 30, max: 70 },
+  { name: "Armlänge (Arm Length)", description: "Measure from the shoulder tip to the wrist with your arm slightly bent.", image: "arm_length", group: "upper", min: 40, max: 100 },
+  { name: "Bizepsumfang (Bicep Circumference)", description: "Measure around the fullest part of your bicep, flexed.", image: "bicep_circumference", group: "upper", min: 20, max: 60 },
+  { name: "Unterarmumfang (Forearm Circumference)", description: "Measure around the fullest part of your forearm.", image: "forearm_circumference", group: "upper", min: 15, max: 50 },
+  { name: "Rückenlänge (Back Length)", description: "Measure from the base of your neck to your waistline.", image: "back_length", group: "upper", min: 30, max: 80 },
+  { name: "Taillenumfang (Waist Circumference)", description: "Measure around your natural waistline, above the hips.", image: "waist_circumference", group: "upper", min: 50, max: 150 },
+  { name: "Hüftumfang (Hip Circumference)", description: "Measure around the fullest part of your hips.", image: "hip_circumference", group: "lower", min: 60, max: 160 },
+  { name: "Innenbeinlänge (Inseam)", description: "Measure from the crotch to the floor along the inside of your leg.", image: "inseam", group: "lower", min: 50, max: 120 },
+  { name: "Oberschenkelumfang (Thigh Circumference)", description: "Measure around the fullest part of your thigh.", image: "thigh_circumference", group: "lower", min: 30, max: 90 },
+  { name: "Kalbumfang (Calf Circumference)", description: "Measure around the fullest part of your calf.", image: "calf_circumference", group: "lower", min: 20, max: 60 },
+  { name: "Reiterate (Head Width)", description: "Measure the width of your head above the ears.", image: "head_width", group: "head", min: 10, max: 30 },
+  { name: "Kopfumfang (Head Circumference)", description: "Measure around your head above the ears and eyebrows.", image: "head_circumference", group: "head", min: 40, max: 70 },
+  { name: "Fußlänge (Foot Length)", description: "Measure from the heel to the tip of your longest toe.", image: "foot_length", group: "feet", min: 20, max: 40 },
 ];
 
-// Organize measurements by group
-const measurementGroups = {
-  "Full Body": measurements.filter(m => m.group === "Full Body"),
-  "Upper Body": measurements.filter(m => m.group === "Upper Body"),
-  "Lower Body": measurements.filter(m => m.group === "Lower Body"),
-  "Head": measurements.filter(m => m.group === "Head"),
-  "Feet": measurements.filter(m => m.group === "Feet"),
-};
+const groupOrder = ["full", "upper", "lower", "head", "feet"] as const;
+const groupLabels: Record<string, string> = { full: "BODY", upper: "UPPER", lower: "LOWER", head: "HEAD", feet: "FEET" };
 
+const measurementGroups = groupOrder.reduce((acc, key) => {
+  acc[key] = measurements.filter(m => m.group === key);
+  return acc;
+}, {} as Record<string, typeof measurements>);
+
+/* ── circular progress ring ── */
+function ProgressRing({ radius = 36, stroke = 4, progress }: { radius?: number; stroke?: number; progress: number }) {
+  const normalizedRadius = radius - stroke;
+  const circumference = 2 * Math.PI * normalizedRadius;
+  const offset = circumference - (progress / 100) * circumference;
+  return (
+    <svg width={radius * 2} height={radius * 2} className="transform -rotate-90">
+      <circle cx={radius} cy={radius} r={normalizedRadius} fill="none" stroke="var(--border)" strokeWidth={stroke} />
+      <motion.circle
+        cx={radius} cy={radius} r={normalizedRadius} fill="none"
+        stroke={progress === 100 ? "var(--signal)" : "var(--primary)"}
+        strokeWidth={stroke} strokeLinecap="round"
+        strokeDasharray={circumference}
+        initial={false}
+        animate={{ strokeDashoffset: offset }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      />
+    </svg>
+  );
+}
+
+/* ── vertical telemetry stepper ── */
+function TelemetryStepper({ groups, active, completedMap, onSelect }: {
+  groups: string[]; active: string; completedMap: Record<string, number>; onSelect: (g: string) => void;
+}) {
+  return (
+    <div className="space-y-1">
+      {groups.map((group, idx) => {
+        const isActive = group === active;
+        const isComplete = completedMap[group] === measurementGroups[group].length;
+        return (
+          <button
+            key={group}
+            type="button"
+            onClick={() => onSelect(group)}
+            className="w-full flex items-center gap-4 py-3 px-3 rounded-sm transition-colors duration-200 group text-left"
+          >
+            {/* Step indicator */}
+            <div className="relative flex-shrink-0">
+              <div className={`w-8 h-8 rounded-sm border flex items-center justify-center font-data text-xs transition-all duration-300 ${
+                isActive ? "border-[var(--signal)] bg-[var(--signal)]/10 text-[var(--signal)]" :
+                isComplete ? "border-[var(--success)] bg-[var(--success)]/10 text-[var(--success)]" :
+                "border-[var(--border)] text-foreground-secondary"
+              }`}>
+                {isComplete ? <Check size={14} /> : <span>{String(idx + 1).padStart(2, "0")}</span>}
+              </div>
+              {/* Connector line */}
+              {idx < groups.length - 1 && (
+                <div className="absolute left-1/2 top-full -translate-x-1/2 w-px h-3 bg-[var(--border)]" />
+              )}
+            </div>
+            {/* Label */}
+            <div className="flex-1 min-w-0">
+              <div className={`font-data text-xs uppercase tracking-atelier truncate transition-colors duration-200 ${
+                isActive ? "text-foreground" : "text-foreground-secondary"
+              }`}>
+                {groupLabels[group]}
+              </div>
+              <div className="font-data text-[10px] text-foreground-secondary/50 mt-0.5">
+                {completedMap[group]}/{measurementGroups[group].length}
+              </div>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── main page ── */
 export default function FullBodySuitPage() {
   const router = useRouter();
-  
-  // Form state
+
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string | null>>({});
   const [orderNumber, setOrderNumber] = useState<string>("");
   const [ebayUsername, setEbayUsername] = useState<string>("");
-  
-  // UI state
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const [showFailure, setShowFailure] = useState<boolean>(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("Full Body");
-  
-  // Load saved values from localStorage
+  const [activeGroup, setActiveGroup] = useState<string>("full");
+
+  // Load / persist
   useEffect(() => {
-    const savedData = localStorage.getItem('full-body-suit-measurements');
-    if (savedData) {
+    const saved = localStorage.getItem("full-body-suit-measurements");
+    if (saved) {
       try {
-        const parsed = JSON.parse(savedData);
-        if (parsed.orderNumber) setOrderNumber(parsed.orderNumber);
-        if (parsed.ebayUsername) setEbayUsername(parsed.ebayUsername);
-        if (parsed.measurements) setFormData(parsed.measurements);
-      } catch (e) {
-        console.error('Error loading saved measurements', e);
-      }
+        const p = JSON.parse(saved);
+        if (p.orderNumber) setOrderNumber(p.orderNumber);
+        if (p.ebayUsername) setEbayUsername(p.ebayUsername);
+        if (p.measurements) setFormData(p.measurements);
+      } catch {}
     }
   }, []);
-  
-  // Save values to localStorage when they change
   useEffect(() => {
-    localStorage.setItem('full-body-suit-measurements', JSON.stringify({
-      orderNumber,
-      ebayUsername,
-      measurements: formData
-    }));
+    localStorage.setItem("full-body-suit-measurements", JSON.stringify({ orderNumber, ebayUsername, measurements: formData }));
   }, [orderNumber, ebayUsername, formData]);
-  
-  // Handle measurement input change
+
+  // Validation
   const handleChange = useCallback((name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
-    
     if (value) {
-      const measurement = measurements.find(m => m.name === name);
-      if (measurement) {
-        const numericValue = parseFloat(value);
-        if (isNaN(numericValue) || numericValue < measurement.min || numericValue > measurement.max) {
-          setErrors(prev => ({
-            ...prev,
-            [name]: `Value must be between ${measurement.min} and ${measurement.max} cm`,
-          }));
-        } else {
-          setErrors(prev => ({ ...prev, [name]: null }));
-        }
+      const m = measurements.find(mm => mm.name === name);
+      if (m) {
+        const n = parseFloat(value);
+        setErrors(prev => ({ ...prev, [name]: (isNaN(n) || n < m.min || n > m.max) ? `Range ${m.min}–${m.max} cm` : null }));
       }
     } else {
       setErrors(prev => ({ ...prev, [name]: null }));
     }
   }, []);
-  
-  // Prepare submission data
-  const prepareSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    // Validate form
-    if (Object.values(errors).some((error) => error)) {
-      alert("Please correct the errors before submitting.");
-      return;
-    }
-    
-    if (!orderNumber.trim()) {
-      alert("Please enter an order number.");
-      return;
-    }
-    
-    if (!ebayUsername.trim()) {
-      alert("Please enter an eBay username.");
-      return;
-    }
-    
-    const completedMeasurements = Object.values(formData).filter(Boolean).length;
-    if (completedMeasurements < measurements.length) {
-      alert(`Please complete all measurements before submitting. You have completed ${completedMeasurements} of ${measurements.length} measurements.`);
-      return;
-    }
-    
-    // Show confirm dialog
+
+  const filledCount = Object.values(formData).filter(Boolean).length;
+  const total = measurements.length;
+  const progress = total > 0 ? (filledCount / total) * 100 : 0;
+  const isComplete = filledCount === total;
+
+  const completedMap = groupOrder.reduce((acc, key) => {
+    acc[key] = measurements.filter(m => m.group === key && formData[m.name]).length;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const prepareSubmit = useCallback(() => {
+    if (Object.values(errors).some(e => e)) { alert("Please correct the errors before submitting."); return; }
+    if (!ebayUsername.trim()) { alert("Please enter an eBay username."); return; }
+    if (filledCount === 0) { alert("Please enter at least one measurement before submitting."); return; }
     setShowConfirmDialog(true);
-  }, [errors, orderNumber, ebayUsername, formData, measurements.length]);
-  
-  // Actual form submission
+  }, [errors, orderNumber, ebayUsername, filledCount]);
+
   const handleSubmit = useCallback(async () => {
     setShowConfirmDialog(false);
     setIsSubmitting(true);
-    
     try {
       const response = await fetch("/api/submitMeasurement", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "full-body-suit",
-          orderNumber,
-          ebayUsername,
-          measurements: formData,
-        }),
+        body: JSON.stringify({ type: "full-body-suit", orderNumber, ebayUsername, measurements: formData }),
       });
-      
       setIsSubmitting(false);
-      
       if (response.ok) {
-        // Clear saved data
-        localStorage.removeItem('full-body-suit-measurements');
-        
-        // Show success
+        localStorage.removeItem("full-body-suit-measurements");
         setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          router.push("/");
-        }, 2000);
+        setTimeout(() => { setShowSuccess(false); router.push("/"); }, 2500);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        setSubmitError(errorData.message || "Failed to submit measurements. Please try again.");
+        setSubmitError(errorData.message || "Failed to submit. Please try again.");
         setShowFailure(true);
         setTimeout(() => setShowFailure(false), 2000);
       }
-    } catch (error) {
+    } catch {
       setIsSubmitting(false);
       setSubmitError("An error occurred. Please try again.");
       setShowFailure(true);
       setTimeout(() => setShowFailure(false), 2000);
     }
   }, [orderNumber, ebayUsername, formData, router]);
-  
-  // Handle modal navigation
-  const handleModalNavigate = useCallback((direction: 'prev' | 'next') => {
-    if (!selectedImage) return;
-    
-    const currentIndex = measurements.findIndex((m) => m.image === selectedImage);
-    if (direction === 'next') {
-      const nextIndex = (currentIndex + 1) % measurements.length;
-      setSelectedImage(measurements[nextIndex].image);
-    } else {
-      const prevIndex = (currentIndex - 1 + measurements.length) % measurements.length;
-      setSelectedImage(measurements[prevIndex].image);
-    }
-  }, [selectedImage, measurements]);
-  
-  // Calculate progress
-  const completed = Object.values(formData).filter(Boolean).length;
-  const total = measurements.length;
-  const progress = (completed / total) * 100;
-  
-  // Calculate group completion
-  const groupCompletion = Object.entries(measurementGroups).reduce((acc, [group, items]) => {
-    const groupTotal = items.length;
-    const groupCompleted = items.filter(item => !!formData[item.name]).length;
-    const percentage = groupTotal > 0 ? (groupCompleted / groupTotal) * 100 : 0;
-    
-    acc[group] = {
-      total: groupTotal,
-      completed: groupCompleted,
-      percentage
-    };
-    
-    return acc;
-  }, {} as Record<string, { total: number; completed: number; percentage: number }>);
 
-  // Animation variants
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (index: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: index * 0.05,
-        duration: 0.5,
-        ease: [0.25, 0.1, 0.25, 1],
-      },
-    }),
-  };
+  const handleModalNavigate = useCallback((direction: "prev" | "next") => {
+    if (!selectedImage) return;
+    const idx = measurements.findIndex(m => m.image === selectedImage);
+    const next = direction === "next" ? (idx + 1) % measurements.length : (idx - 1 + measurements.length) % measurements.length;
+    setSelectedImage(measurements[next].image);
+  }, [selectedImage]);
+
+  const goNextGroup = () => { const i = groupOrder.indexOf(activeGroup as any); if (i < groupOrder.length - 1) setActiveGroup(groupOrder[i + 1]); };
+  const goPrevGroup = () => { const i = groupOrder.indexOf(activeGroup as any); if (i > 0) setActiveGroup(groupOrder[i - 1]); };
 
   return (
     <>
       <Header />
-      
-      <main className="min-h-screen pb-20 pt-24 relative">
-        {/* Status indicators */}
+
+      <main className="min-h-screen pt-24 pb-16 relative">
         {isSubmitting && <LoadingSpinner />}
-        {showSuccess && <SuccessAnimation message="Measurements Submitted!" />}
-        {showFailure && <FailureAnimation message={submitError || "An error occurred"} />}
-        
-        {/* Confirmation Dialog */}
+        {showSuccess && <SuccessAnimation message="Transmission Complete" subMessage="Data received by Imperial Command." />}
+        {showFailure && <FailureAnimation message={submitError || "Ein Fehler ist aufgetreten"} />}
         <ConfirmDialog
           isOpen={showConfirmDialog}
-          title="Submit Measurements"
-          message={`You are about to submit ${completed} of ${total} measurements. This action cannot be undone.`}
-          confirmText="Yes, Submit"
-          cancelText="Cancel"
+          title="CONFIRM CONFIGURATION"
+          message={`Bestätigen: ${filledCount} von ${total} Messwerte übertragen.`}
+          confirmText="Confirm"
+          cancelText="Abort"
           onConfirm={handleSubmit}
           onCancel={() => setShowConfirmDialog(false)}
         />
-        
-        {/* Background elements */}
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute inset-0" style={{background: 'var(--background)'}} />
-          
-          <div 
-            className="absolute top-0 right-0 h-[40%] w-[80%] rounded-full opacity-10"
-            style={{
-              background: 'var(--gradient-primary)',
-              filter: 'blur(140px)'
-            }}
-          />
-          
-          <div 
-            className="absolute bottom-0 left-0 h-[40%] w-[60%] rounded-full opacity-10"
-            style={{
-              background: 'var(--gradient-secondary)',
-              filter: 'blur(120px)'
-            }}
-          />
-        </div>
-        
+
         {/* Page header */}
-        <div className="container mx-auto px-4 mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="flex flex-col items-center text-center mb-8"
-          >
-            <Badge variant="primary" size="md" className="mb-3">PRÄZISION</Badge>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              Full Body <GradientText>Measurements</GradientText>
+        <div className="max-w-7xl mx-auto px-4 mb-10">
+          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight uppercase">
+              Full Body Suit <span className="text-crawl">Configuration</span>
             </h1>
-            <p className="text-foreground-secondary max-w-2xl">
-              Please provide accurate measurements for your custom suit. Click on images for detailed instructions.
+            <p className="font-data text-sm text-foreground-secondary mt-2">
+              Precision measurement · 16 data points · Millimeter-accurate
             </p>
           </motion.div>
-          
-          {/* Enhanced Progress bar with detailed tracking */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="max-w-2xl mx-auto mb-12"
-          >
-            <div className="flex justify-between mb-2 text-sm">
-              <span className="text-foreground-secondary font-medium">
-                <strong className="text-primary">{completed}</strong> of <strong>{total}</strong> completed
-              </span>
-              <span className="font-medium text-primary">{Math.round(progress)}%</span>
-            </div>
-            
-            <div className="h-3 w-full bg-surface-secondary rounded-full overflow-hidden mb-3">
-              <motion.div 
-                className="h-full rounded-full"
-                style={{ background: 'var(--gradient-primary)' }}
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5 }}
-              />
-            </div>
-            
-            {/* Measurement completion indicators */}
-            <div className="grid grid-cols-8 gap-1 mb-2">
-              {measurements.map((measurement, idx) => (
-                <motion.div
-                  key={measurement.name}
-                  className={`h-1.5 rounded-full ${
-                    formData[measurement.name] ? 'bg-primary' : 'bg-surface-secondary'
-                  }`}
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 + idx * 0.02 }}
-                />
-              ))}
-            </div>
-            
-            {/* Progress guidance */}
-            <div className="text-xs text-foreground-secondary/80 text-center">
-              <span className="inline-block px-3 py-1 bg-surface rounded-full">
-                {completed === total ? (
-                  <span className="text-success font-medium">All {total} measurements completed! Ready to submit.</span>
-                ) : completed > total/2 ? (
-                  <span>Almost there! Complete the remaining measurements before submitting.</span>
-                ) : (
-                  <span>Please complete all {total} measurements before submitting.</span>
-                )}
-              </span>
-            </div>
-          </motion.div>
         </div>
-        
-        {/* Main content */}
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="max-w-7xl mx-auto glass rounded-3xl shadow-3d overflow-hidden border border-border"
-          >
-            {/* Order information section */}
-            <div className="p-8 border-b" style={{borderColor: 'var(--border)', background: 'var(--surface)'}}>
-              <h3 className="text-xl font-semibold mb-6 flex items-center">
-                <Info size={18} className="mr-2 text-primary" />
-                Order Information
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
-                <FormInput
-                  id="order-number"
-                  label="Order Number"
-                  value={orderNumber}
-                  onChange={setOrderNumber}
-                  placeholder="Enter your order number"
-                  required
-                />
-                
-                <FormInput
-                  id="ebay-username"
-                  label="eBay Username"
-                  value={ebayUsername}
-                  onChange={setEbayUsername}
-                  placeholder="Enter your eBay username"
-                  required
-                />
-              </div>
-            </div>
-            
-            {/* Measurements section */}
-            <form onSubmit={prepareSubmit} className="p-8">
-              {/* Group tabs */}
-              <div className="mb-8 border-b border-border">
-                <div className="flex overflow-x-auto pb-2 hide-scrollbar">
-                  {Object.keys(measurementGroups).map((group) => (
-                    <button
-                      key={group}
-                      type="button"
-                      onClick={() => setActiveTab(group)}
-                      className={`px-4 py-3 relative whitespace-nowrap font-medium text-sm transition-colors flex items-center ${
-                        activeTab === group
-                          ? "text-primary"
-                          : "text-foreground-secondary hover:text-foreground"
-                      }`}
-                    >
-                      {group}
-                      {groupCompletion[group]?.completed === groupCompletion[group]?.total && (
-                        <span className="ml-1 text-success"><Check size={14} /></span>
-                      )}
-                      {activeTab === group && (
-                        <motion.div
-                          layoutId="activeTab"
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                        />
-                      )}
-                    </button>
-                  ))}
+
+        {/* Split layout: stepper + form */}
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 lg:gap-12">
+
+            {/* ── Left: Telemetry Stepper (desktop) / Progress bar (mobile) ── */}
+            <aside className="lg:sticky lg:top-24 h-fit">
+              {/* Mobile: horizontal progress */}
+              <div className="lg:hidden mb-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <ProgressRing progress={progress} radius={32} stroke={3} />
+                  <div>
+                    <div className="font-data text-2xl font-bold tabular-nums">{Math.round(progress)}%</div>
+                    <div className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary">{filledCount}/{total} Felder</div>
+                  </div>
+                </div>
+                <div className="h-1 w-full bg-[var(--border)] rounded-full overflow-hidden">
+                  <motion.div className="h-full bg-[var(--signal)]" animate={{ width: `${progress}%` }} transition={{ duration: 0.5 }} />
                 </div>
               </div>
-              
-              {/* Active group measurements */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {measurementGroups[activeTab].map((measurement, index) => (
-                      <motion.div
-                        key={measurement.name}
-                        custom={index}
-                        variants={cardVariants}
-                        initial="hidden"
-                        animate="visible"
-                      >
-                        <MeasurementCard
-                          name={measurement.name}
-                          image={measurement.image}
-                          value={formData[measurement.name] || ""}
-                          onChange={(value) => handleChange(measurement.name, value)}
-                          description={measurement.description}
-                          min={measurement.min}
-                          max={measurement.max}
-                          error={errors[measurement.name]}
-                          onClick={() => setSelectedImage(measurement.image)}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-              
-              {/* Total measurement summary without submit button */}
-              <div className="mt-8 bg-surface-secondary/30 rounded-xl p-4 border border-border">
-                <h3 className="text-lg font-medium mb-3 text-center">Measurement Submission Summary</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                  <div className="bg-surface p-3 rounded-lg">
-                    <div className="text-sm text-foreground-secondary mb-1">Order Number</div>
-                    <div className="font-medium">{orderNumber || "Not provided"}</div>
-                  </div>
-                  
-                  <div className="bg-surface p-3 rounded-lg">
-                    <div className="text-sm text-foreground-secondary mb-1">eBay Username</div>
-                    <div className="font-medium">{ebayUsername || "Not provided"}</div>
+
+              {/* Desktop: vertical stepper */}
+              <div className="hidden lg:block border border-[var(--border)] rounded-sm p-4 bg-[var(--surface-elevated)]">
+                <div className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary mb-4 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--signal)] animate-pulse-gentle" />
+                  TELEMETRY
+                </div>
+                <TelemetryStepper groups={[...groupOrder]} active={activeGroup} completedMap={completedMap} onSelect={setActiveGroup} />
+
+                {/* Progress ring at bottom of stepper */}
+                <div className="mt-6 pt-4 border-t border-[var(--border)] flex items-center gap-4">
+                  <ProgressRing progress={progress} radius={36} stroke={4} />
+                  <div>
+                    <div className="font-data text-xs uppercase tracking-atelier text-foreground-secondary">PROGRESS</div>
+                    <div className="font-data text-lg font-bold tabular-nums">{Math.round(progress)}%</div>
                   </div>
                 </div>
-                
-                <div className="mb-4">
-                  <div className="text-sm font-medium mb-2">Measurement Completion: {completed}/{total}</div>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                    {Object.entries(groupCompletion).map(([group, stats]) => (
-                      <div key={group} className="bg-surface p-2 rounded-lg text-center">
-                        <div className="text-xs text-foreground-secondary mb-1">{group}</div>
-                        <div className="h-1.5 bg-surface-secondary rounded-full mb-1 overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full ${
-                              stats.percentage === 100 ? 'bg-success' : 'bg-primary'
-                            }`}
-                            style={{ width: `${stats.percentage}%` }} 
-                          />
-                        </div>
-                        <div className="text-xs font-medium">
-                          {stats.completed}/{stats.total}
-                          {stats.percentage === 100 && (
-                            <span className="ml-1 text-success"><Check size={10} /></span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              </div>
+            </aside>
+
+            {/* ── Right: Form content ── */}
+            <div className="min-w-0">
+              {/* Order info */}
+              <div className="border border-[var(--border)] rounded-sm p-6 mb-6 bg-[var(--surface-elevated)]">
+                <h3 className="font-data text-xs uppercase tracking-atelier text-foreground-secondary mb-4 flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-[var(--primary)]" />
+                  PILOT DATA
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormInput id="order-number" label="Order Ref. (optional)" value={orderNumber} onChange={setOrderNumber} placeholder="e.g. FB-12345" />
+                  <FormInput id="ebay-username" label="eBay Username" value={ebayUsername} onChange={setEbayUsername} placeholder="eBay username" required />
                 </div>
-                
-                {/* Validation status */}
-                <div className="bg-surface p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm font-medium">Submission Status</div>
-                    {completed === total ? (
-                      <span className="text-xs font-medium bg-success/20 text-success px-2 py-0.5 rounded-full flex items-center">
-                        <Check size={12} className="mr-1" />
-                        Ready to Submit
-                      </span>
-                    ) : (
-                      <span className="text-xs font-medium bg-warning/20 text-warning px-2 py-0.5 rounded-full flex items-center">
-                        <AlertTriangle size={12} className="mr-1" />
-                        Incomplete ({total - completed} remaining)
-                      </span>
+              </div>
+
+              {/* Active group fields */}
+              <div className="border border-[var(--border)] rounded-sm p-6 bg-[var(--surface-elevated)]">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-data text-xs uppercase tracking-atelier text-foreground-secondary flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--signal)]" />
+                    {groupLabels[activeGroup]} · {completedMap[activeGroup]}/{measurementGroups[activeGroup].length}
+                  </h3>
+                  <div className="flex gap-2">
+                    {groupOrder.indexOf(activeGroup as any) > 0 && (
+                      <button type="button" onClick={goPrevGroup} className="p-2 rounded-sm border border-[var(--border)] hover:border-[var(--border-strong)] transition-colors">
+                        <ChevronLeft size={16} />
+                      </button>
+                    )}
+                    {groupOrder.indexOf(activeGroup as any) < groupOrder.length - 1 && (
+                      <button type="button" onClick={goNextGroup} className="p-2 rounded-sm border border-[var(--border)] hover:border-[var(--border-strong)] transition-colors">
+                        <ChevronRight size={16} />
+                      </button>
                     )}
                   </div>
-                  
-                  {completed < total && (
-                    <div className="text-xs text-warning">
-                      Please complete all measurements before submitting for best results.
-                    </div>
-                  )}
-                  
-                  {Object.values(errors).some(error => error) && (
-                    <div className="text-xs text-error mt-1">
-                      Please correct the measurement errors before submitting.
-                    </div>
-                  )}
+                </div>
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeGroup}
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -24 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-5"
+                  >
+                    {measurementGroups[activeGroup].map((measurement) => (
+                      <MeasurementCard
+                        key={measurement.name}
+                        name={measurement.name}
+                        image={measurement.image}
+                        value={formData[measurement.name] || ""}
+                        onChange={(v) => handleChange(measurement.name, v)}
+                        description={measurement.description}
+                        min={measurement.min}
+                        max={measurement.max}
+                        error={errors[measurement.name]}
+                        onClick={() => setSelectedImage(measurement.image)}
+                      />
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Submit section */}
+              <div className="mt-6 border border-[var(--border)] rounded-sm p-6 bg-[var(--surface-elevated)]">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="font-data text-xs text-foreground-secondary">
+                    <span className="text-foreground font-bold">{filledCount}</span>/{total} Messwerte
+                    {filledCount < total && <span className="text-foreground-secondary/60"> — optional remaining</span>}
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {!ebayUsername.trim() && (
+                      <span className="font-data text-[11px] text-[var(--warning)] flex items-center gap-1">
+                        <AlertTriangle size={12} /> eBay Username required
+                      </span>
+                    )}
+                    <motion.button
+                      type="button"
+                      onClick={prepareSubmit}
+                      disabled={isSubmitting || !!Object.values(errors).some(e => e) || !ebayUsername.trim()}
+                      className={`px-8 py-3 rounded-sm font-data text-sm uppercase tracking-wider flex items-center gap-2 transition-all duration-300 border ${
+                        isComplete
+                          ? "bg-transparent border-[var(--signal)] text-[var(--signal)] animate-glow"
+                          : "bg-[var(--gradient-primary)] border-transparent text-white"
+                      } disabled:opacity-40 disabled:cursor-not-allowed`}
+                      whileHover={!isSubmitting && ebayUsername.trim() ? { scale: 1.02 } : {}}
+                      whileTap={!isSubmitting && ebayUsername.trim() ? { scale: 0.98 } : {}}
+                    >
+                      {isSubmitting ? (
+                        <><LoadingSpinner fullScreen={false} size="sm" /><span>Übertrage...</span></>
+                      ) : (
+                        <><Save size={16} /><span>{isComplete ? "Complete Configuration" : "Transmit Data"}</span></>
+                      )}
+                    </motion.button>
+                  </div>
                 </div>
               </div>
-              
-              {/* Enhanced next group navigation */}
-              {activeTab !== Object.keys(measurementGroups)[Object.keys(measurementGroups).length - 1] && (
-                <div className="mt-8 flex justify-center">
-                  <motion.button
-                    type="button"
-                    onClick={() => {
-                      const groupKeys = Object.keys(measurementGroups);
-                      const currentIndex = groupKeys.indexOf(activeTab);
-                      if (currentIndex < groupKeys.length - 1) {
-                        setActiveTab(groupKeys[currentIndex + 1]);
-                      }
-                    }}
-                    className="btn-primary px-6 py-3 rounded-xl font-semibold shadow-lg flex items-center gap-2"
-                    whileHover={{ y: -5, scale: 1.05 }}
-                    whileTap={{ y: 0, scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                  >
-                    <span>Continue to {(() => {
-                      const groupKeys = Object.keys(measurementGroups);
-                      const currentIndex = groupKeys.indexOf(activeTab);
-                      return currentIndex < groupKeys.length - 1 ? groupKeys[currentIndex + 1] : "";
-                    })()}</span>
-                    <ChevronRight size={18} />
-                  </motion.button>
-                </div>
-              )}
-              
-              {/* Enhanced submit button in Feet section */}
-              {activeTab === "Feet" && (
-                <div className="mt-10 flex flex-col items-center">
-                  <motion.button
-                    type="submit"
-                    disabled={isSubmitting || Object.values(errors).some(error => error) || Object.values(formData).filter(Boolean).length < measurements.length || !orderNumber.trim() || !ebayUsername.trim()}
-                    className="btn-primary px-10 py-4 rounded-xl font-bold shadow-lg text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    whileHover={Object.values(formData).filter(Boolean).length === measurements.length ? { y: -5, scale: 1.05 } : {}}
-                    whileTap={Object.values(formData).filter(Boolean).length === measurements.length ? { y: 0, scale: 0.98 } : {}}
-                    transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                  >
-                    <span className="flex items-center gap-3 justify-center">
-                      {isSubmitting ? (
-                        <>
-                          <LoadingSpinner fullScreen={false} size="sm" />
-                          <span>Processing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Save size={20} strokeWidth={2} />
-                          <span>SUBMIT ALL MEASUREMENTS</span>
-                        </>
-                      )}
-                    </span>
-                  </motion.button>
-                  
-                  {/* Submit status message */}
-                  {Object.values(formData).filter(Boolean).length < measurements.length && (
-                    <div className="mt-3 text-sm text-warning bg-warning/10 px-4 py-2 rounded-lg">
-                      <span className="flex items-center gap-1">
-                        <AlertTriangle size={14} />
-                        Complete all {measurements.length} measurements to enable submission 
-                        ({Object.values(formData).filter(Boolean).length}/{measurements.length} completed)
-                      </span>
-                    </div>
-                  )}
-                  
-                  {!orderNumber.trim() && (
-                    <div className="mt-2 text-sm text-warning">Order number is required</div>
-                  )}
-                  
-                  {!ebayUsername.trim() && (
-                    <div className="mt-2 text-sm text-warning">eBay username is required</div>
-                  )}
-                </div>
-              )}
-            </form>
-          </motion.div>
+            </div>
+          </div>
         </div>
-        
-        {/* Measurement image modal */}
+
         <MeasurementModal
           isOpen={!!selectedImage}
           onClose={() => setSelectedImage(null)}
@@ -714,20 +388,7 @@ export default function FullBodySuitPage() {
           measurements={measurements.map(m => ({ name: m.name, image: m.image }))}
           onNavigate={handleModalNavigate}
         />
-        
-        {/* Custom scrollbar styles */}
-        <style jsx global>{`
-          .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-          .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-          }
-        `}</style>
       </main>
-      
-      <Footer />
     </>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { createContext, useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import "./globals.css";
@@ -18,6 +18,18 @@ const geistMono = Geist_Mono({
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 type Theme = "dark" | "light" | "system";
@@ -91,17 +103,17 @@ export default function RootLayout({
   // Effect to handle initial theme and window mounting
   useEffect(() => {
     setMounted(true);
-    
-    // Get saved theme preference
-    const savedTheme = localStorage.getItem("theme") as Theme || "system";
-    setTheme(savedTheme);
+
+    // Always default to dark — ignore any previously saved preference
+    localStorage.setItem("theme", "dark");
+    setTheme("dark");
   }, [setTheme]);
 
   // Prevent SSR flash
   if (!mounted) {
     return (
       <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}>
+        <body className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} antialiased`}>
           <div className="min-h-screen bg-[#030014]"></div>
         </body>
       </html>
@@ -116,7 +128,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} antialiased`}>
         <ThemeContext.Provider value={{ theme, resolvedTheme, toggleTheme, setTheme }}>
           <AnimatePresence mode="wait">
             <motion.div
