@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Header } from "@/app/components/Header";
 import { FormInput } from "@/app/components/FormInput";
+import { MeasurementModal } from "@/app/components/MeasurementModal";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import SuccessAnimation from "@/app/components/SuccessAnimation";
 import FailureAnimation from "@/app/components/FailureAnimation";
@@ -27,6 +28,7 @@ export default function HelmetPage() {
   const [showFailure, setShowFailure] = useState<boolean>(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const filledCount = Object.values(formData).filter(Boolean).length;
   const total = helmetMeasurements.length;
@@ -63,6 +65,15 @@ export default function HelmetPage() {
       setTimeout(() => setShowFailure(false), 2000);
     }
   }, [orderNumber, ebayUsername, formData, router]);
+
+  const handleModalNavigate = useCallback((direction: "prev" | "next") => {
+    if (!selectedImage) return;
+    const idx = helmetMeasurements.findIndex(m => m.image === selectedImage);
+    const next = direction === "next"
+      ? (idx + 1) % helmetMeasurements.length
+      : (idx - 1 + helmetMeasurements.length) % helmetMeasurements.length;
+    setSelectedImage(helmetMeasurements[next].image);
+  }, [selectedImage]);
 
   return (
     <>
@@ -141,7 +152,7 @@ export default function HelmetPage() {
                   {helmetMeasurements.map((m) => (
                     <div key={m.name} className="rounded-sm border border-[var(--border)] p-5 bg-[var(--background)]">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-sm bg-[var(--surface-elevated)] flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-sm bg-[var(--surface-elevated)] flex items-center justify-center cursor-pointer hover:border-[var(--primary)] border border-transparent transition-colors" onClick={() => setSelectedImage(m.image)}>
                           <img src={`/images/${m.image}.png`} alt={m.name} className="w-8 h-8 object-contain" />
                         </div>
                         <div>
@@ -199,6 +210,15 @@ export default function HelmetPage() {
             </div>
           </div>
         </div>
+
+        {/* Image enlargement modal */}
+        <MeasurementModal
+          isOpen={!!selectedImage}
+          onClose={() => setSelectedImage(null)}
+          selectedImage={selectedImage || ""}
+          measurements={helmetMeasurements.map(m => ({ name: m.name, image: m.image }))}
+          onNavigate={handleModalNavigate}
+        />
       </main>
     </>
   );
