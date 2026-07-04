@@ -145,7 +145,7 @@ export default function HelmetPage() {
                         className="relative w-full h-48 rounded-sm bg-[var(--surface-elevated)] flex items-center justify-center cursor-pointer hover:border-[var(--primary)] border border-[var(--border)] transition-all duration-300 mb-4 overflow-hidden group"
                         onClick={() => setSelectedImage(m.image)}
                       >
-                        <img src={`/images/${m.image}.png`} alt={m.name} className="h-40 object-contain group-hover:scale-110 transition-transform duration-300" />
+                        <img src={`/images/${m.image}`} alt={m.name} className="h-40 object-contain group-hover:scale-110 transition-transform duration-300" />
                         <div className="absolute bottom-2 right-2 bg-[var(--background)]/80 backdrop-blur-sm rounded-sm px-2 py-1 font-data text-[10px] text-foreground-secondary opacity-0 group-hover:opacity-100 transition-opacity">
                           Zum Vergrößern klicken
                         </div>
