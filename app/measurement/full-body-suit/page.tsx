@@ -338,7 +338,7 @@ export default function FullBodySuitPage() {
                     transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                     className="grid grid-cols-1 md:grid-cols-2 gap-5"
                   >
-                    {measurementGroups[activeGroup].filter(mm => mm.image).map((measurement) => {
+                    {measurementGroups[activeGroup].map((measurement) => {
                       const stepNum = measurements.findIndex(mm => mm.name === measurement.name) + 1;
                       return (
                         <div key={measurement.name} className="relative">
