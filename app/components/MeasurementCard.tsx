@@ -52,7 +52,7 @@ export function MeasurementCard({
       <div className="relative z-10">
         {/* Reference image with tape-measure overlay */}
         <div
-          className="relative w-full h-28 mb-5 cursor-pointer rounded-sm overflow-hidden bg-[var(--background)]/30"
+          className="relative w-full h-56 mb-5 cursor-pointer rounded-sm overflow-hidden bg-[var(--background)]/30"
           onClick={onClick}
         >
           <motion.div

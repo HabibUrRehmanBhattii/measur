@@ -151,10 +151,17 @@ export default function HelmetPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {helmetMeasurements.map((m) => (
                     <div key={m.name} className="rounded-sm border border-[var(--border)] p-5 bg-[var(--background)]">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-sm bg-[var(--surface-elevated)] flex items-center justify-center cursor-pointer hover:border-[var(--primary)] border border-transparent transition-colors" onClick={() => setSelectedImage(m.image)}>
-                          <img src={`/images/${m.image}.png`} alt={m.name} className="w-8 h-8 object-contain" />
+                      {/* Large reference image */}
+                      <div
+                        className="relative w-full h-48 rounded-sm bg-[var(--surface-elevated)] flex items-center justify-center cursor-pointer hover:border-[var(--primary)] border border-[var(--border)] transition-all duration-300 mb-4 overflow-hidden group"
+                        onClick={() => setSelectedImage(m.image)}
+                      >
+                        <img src={`/images/${m.image}.png`} alt={m.name} className="h-40 object-contain group-hover:scale-110 transition-transform duration-300" />
+                        <div className="absolute bottom-2 right-2 bg-[var(--background)]/80 backdrop-blur-sm rounded-sm px-2 py-1 font-data text-[10px] text-foreground-secondary opacity-0 group-hover:opacity-100 transition-opacity">
+                          Click to enlarge
                         </div>
+                      </div>
+                      <div className="flex items-center gap-3 mb-3">
                         <div>
                           <h4 className="font-data text-sm font-medium">{m.name}</h4>
                           <p className="font-data text-[10px] text-foreground-secondary">{m.description}</p>
