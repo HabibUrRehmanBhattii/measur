@@ -23,7 +23,7 @@ const measurements = [
   { name: "Bizepsumfang", description: "Messen Sie den vollsten Teil Ihres Bizeps, angespannt.", image: "bicep_circumference", group: "upper" },
   { name: "Unterarmumfang", description: "Messen Sie den vollsten Teil Ihres Unterarms.", image: "forearm_circumference", group: "upper" },
   { name: "Rückenlänge", description: "Messen Sie von der Halsbasis bis zur Taille.", image: "back_length", group: "upper" },
-  { name: "Taillenumfang", description: "Messen Sie um Ihre natürliche Taille, oberhalb der Hüften.", image: "waist_circumference", group: "middle" },
+  { name: "Taillenumfang", description: "Messen Sie um Ihre natürliche Taille, oberhalb der Hüften.", image: "Taillenumfang", group: "middle" },
   { name: "Hüftumfang", description: "Messen Sie den vollsten Teil Ihrer Hüften.", image: "hip_circumference", group: "lower" },
   { name: "Innenbeinlänge", description: "Messen Sie von der Leiste bis zum Boden an der Innenseite des Beins.", image: "inseam", group: "lower" },
   { name: "Oberschenkelumfang", description: "Messen Sie den vollsten Teil Ihres Oberschenkels.", image: "thigh_circumference", group: "lower" },

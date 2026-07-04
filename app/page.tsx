@@ -5,18 +5,7 @@ import { useContext } from "react";
 import { motion } from "framer-motion";
 import { ThemeContext } from "./layout";
 import { Header } from "./components/Header";
-import dynamic from "next/dynamic";
 import { ArrowRight, Crosshair, ShieldCheck, Zap, Target } from "lucide-react";
-
-// Load 3D scene only on client — model-viewer is a custom element, breaks SSR
-const Scene3D = dynamic(() => import("./components/Scene3D"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="font-data text-xs text-foreground-secondary animate-pulse">Loading 3D viewer...</div>
-    </div>
-  ),
-});
 
 export default function HomePage() {
   const router = useRouter();
@@ -93,7 +82,43 @@ export default function HomePage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Scene3D className="w-full h-full" />
+              {/* Animated suit silhouette — pure CSS/SVG, no canvas */}
+              <motion.div
+                className="relative w-full h-full flex items-center justify-center"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="relative">
+                  {/* Glowing ring behind */}
+                  <div className="absolute inset-0 -m-8 rounded-full bg-[var(--signal)]/10 blur-2xl animate-pulse-gentle" />
+                  {/* Suit icon — CSS only */}
+                  <motion.svg
+                    width="180" height="280" viewBox="0 0 180 280" fill="none"
+                    className="relative z-10"
+                    animate={{ rotateY: [0, 360] }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    style={{ transformStyle: "preserve-3d" }}
+                  >
+                    {/* Head */}
+                    <circle cx="90" cy="35" r="22" stroke="var(--primary)" strokeWidth="2" fill="none" />
+                    {/* Neck */}
+                    <line x1="90" y1="57" x2="90" y2="75" stroke="var(--primary)" strokeWidth="2" />
+                    {/* Torso */}
+                    <path d="M55 75 L125 75 L130 160 L50 160 Z" stroke="var(--signal)" strokeWidth="2" fill="none" />
+                    {/* Arms */}
+                    <line x1="55" y1="80" x2="30" y2="140" stroke="var(--primary)" strokeWidth="2" />
+                    <line x1="125" y1="80" x2="150" y2="140" stroke="var(--primary)" strokeWidth="2" />
+                    {/* Legs */}
+                    <line x1="70" y1="160" x2="65" y2="260" stroke="var(--signal)" strokeWidth="2" />
+                    <line x1="110" y1="160" x2="115" y2="260" stroke="var(--signal)" strokeWidth="2" />
+                    {/* Measurement lines */}
+                    <line x1="40" y1="100" x2="140" y2="100" stroke="var(--signal)" strokeWidth="1" strokeDasharray="4 3" opacity="0.5" />
+                    <line x1="40" y1="130" x2="140" y2="130" stroke="var(--signal)" strokeWidth="1" strokeDasharray="4 3" opacity="0.5" />
+                    <line x1="100" y1="160" x2="100" y2="260" stroke="var(--signal)" strokeWidth="1" strokeDasharray="4 3" opacity="0.3" />
+                  </motion.svg>
+                </div>
+              </motion.div>
             </motion.div>
           </div>
         </section>
