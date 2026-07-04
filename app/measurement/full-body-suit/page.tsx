@@ -132,7 +132,7 @@ export default function FullBodySuitPage() {
   const [showFailure, setShowFailure] = useState<boolean>(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [activeGroup, setActiveGroup] = useState<string>("full");
+  const [activeGroup, setActiveGroup] = useState<string>("general");
 
   // Load / persist
   useEffect(() => {
