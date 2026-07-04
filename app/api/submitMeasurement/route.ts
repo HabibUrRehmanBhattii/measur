@@ -69,7 +69,7 @@ export async function POST(req: Request) {
             requests: [{
               updateCells: {
                 range: { sheetId: 0, startRowIndex: Number(rowIndex) - 1, endRowIndex: Number(rowIndex), startColumnIndex: 0, endColumnIndex: 6 },
-                rows: [{ values: Array(6).fill({ userEnteredFormat: { wrapStrategy: 'WRAP', verticalAlignment: 'TOP', textFormat: { fontSize: 11 } }) }) }],
+                rows: [{ values: Array(6).fill({ userEnteredFormat: { wrapStrategy: 'WRAP', verticalAlignment: 'TOP', textFormat: { fontSize: 11 } } }) }],
                 fields: 'userEnteredFormat'
               }
             }]
