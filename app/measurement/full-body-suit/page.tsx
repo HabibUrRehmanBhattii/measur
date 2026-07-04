@@ -15,26 +15,34 @@ import { Check, AlertTriangle, ChevronRight, ChevronLeft, Save } from "lucide-re
 
 /* ── measurement definitions ── */
 const measurements = [
-  { name: "Gesamthöhe (Total Height)", description: "Stand straight with feet together and measure from the top of your head to the floor.", image: "total_height", group: "full", min: 100, max: 250 },
-  { name: "Brustumfang (Chest Circumference)", description: "Measure around the fullest part of your chest, keeping the tape horizontal.", image: "chest_circumference", group: "upper", min: 50, max: 200 },
-  { name: "Halskreis (Neck Circumference)", description: "Measure around the base of your neck, keeping the tape snug.", image: "neck_circumference", group: "upper", min: 20, max: 60 },
-  { name: "Schulterbreite (Shoulder Width)", description: "Measure across the top of your shoulders from edge to edge.", image: "shoulder_width", group: "upper", min: 30, max: 70 },
-  { name: "Armlänge (Arm Length)", description: "Measure from the shoulder tip to the wrist with your arm slightly bent.", image: "arm_length", group: "upper", min: 40, max: 100 },
-  { name: "Bizepsumfang (Bicep Circumference)", description: "Measure around the fullest part of your bicep, flexed.", image: "bicep_circumference", group: "upper", min: 20, max: 60 },
-  { name: "Unterarmumfang (Forearm Circumference)", description: "Measure around the fullest part of your forearm.", image: "forearm_circumference", group: "upper", min: 15, max: 50 },
-  { name: "Rückenlänge (Back Length)", description: "Measure from the base of your neck to your waistline.", image: "back_length", group: "upper", min: 30, max: 80 },
-  { name: "Taillenumfang (Waist Circumference)", description: "Measure around your natural waistline, above the hips.", image: "waist_circumference", group: "upper", min: 50, max: 150 },
-  { name: "Hüftumfang (Hip Circumference)", description: "Measure around the fullest part of your hips.", image: "hip_circumference", group: "lower", min: 60, max: 160 },
-  { name: "Innenbeinlänge (Inseam)", description: "Measure from the crotch to the floor along the inside of your leg.", image: "inseam", group: "lower", min: 50, max: 120 },
-  { name: "Oberschenkelumfang (Thigh Circumference)", description: "Measure around the fullest part of your thigh.", image: "thigh_circumference", group: "lower", min: 30, max: 90 },
-  { name: "Kalbumfang (Calf Circumference)", description: "Measure around the fullest part of your calf.", image: "calf_circumference", group: "lower", min: 20, max: 60 },
-  { name: "Reiterate (Head Width)", description: "Measure the width of your head above the ears.", image: "head_width", group: "head", min: 10, max: 30 },
-  { name: "Kopfumfang (Head Circumference)", description: "Measure around your head above the ears and eyebrows.", image: "head_circumference", group: "head", min: 40, max: 70 },
-  { name: "Fußlänge (Foot Length)", description: "Measure from the heel to the tip of your longest toe.", image: "foot_length", group: "feet", min: 20, max: 40 },
+  { name: "Geschlecht", description: "Wählen Sie Ihr Geschlecht für die passende Passform.", image: null, group: "general" },
+  { name: "Brustumfang", description: "Messen Sie den Umfang der vollsten Partie Ihrer Brust, horizontal geführt.", image: "chest_circumference", group: "upper" },
+  { name: "Halskreis", description: "Messen Sie um die Basis Ihres Halses, straff geführt.", image: "neck_circumference", group: "upper" },
+  { name: "Schulterbreite", description: "Messen Sie die Breite Ihrer Schultern von Kante zu Kante.", image: "shoulder_width", group: "upper" },
+  { name: "Armlänge", description: "Messen Sie von der Schulterspitze zum Gelenk, leicht gebeugt.", image: "arm_length", group: "upper" },
+  { name: "Bizepsumfang", description: "Messen Sie den vollsten Teil Ihres Bizeps, angespannt.", image: "bicep_circumference", group: "upper" },
+  { name: "Unterarmumfang", description: "Messen Sie den vollsten Teil Ihres Unterarms.", image: "forearm_circumference", group: "upper" },
+  { name: "Rückenlänge", description: "Messen Sie von der Halsbasis bis zur Taille.", image: "back_length", group: "upper" },
+  { name: "Taillenumfang", description: "Messen Sie um Ihre natürliche Taille, oberhalb der Hüften.", image: "waist_circumference", group: "middle" },
+  { name: "Hüftumfang", description: "Messen Sie den vollsten Teil Ihrer Hüften.", image: "hip_circumference", group: "lower" },
+  { name: "Innenbeinlänge", description: "Messen Sie von der Leiste bis zum Boden an der Innenseite des Beins.", image: "inseam", group: "lower" },
+  { name: "Oberschenkelumfang", description: "Messen Sie den vollsten Teil Ihres Oberschenkels.", image: "thigh_circumference", group: "lower" },
+  { name: "Kalbumfang", description: "Messen Sie den vollsten Teil Ihrer Wade.", image: "calf_circumference", group: "lower" },
+  { name: "Kopfbreite", description: "Messen Sie die Breite Ihres Kopfes oberhalb der Ohren.", image: "head_width", group: "head" },
+  { name: "Kopfumfang", description: "Messen Sie um Ihren Kopf oberhalb der Ohren und Augenbrauen.", image: "head_circumference", group: "head" },
+  { name: "Fußlänge", description: "Messen Sie von der Ferse bis zur Spitze Ihres längsten Zehs.", image: "foot_length", group: "feet" },
+  { name: "Gesamthöhe", description: "Messen Sie aufrecht stehend von der Kopfspitze bis zum Boden.", image: "total_height", group: "general" },
 ];
 
-const groupOrder = ["full", "upper", "lower", "head", "feet"] as const;
-const groupLabels: Record<string, string> = { full: "BODY", upper: "UPPER", lower: "LOWER", head: "HEAD", feet: "FEET" };
+const groupOrder = ["general", "upper", "middle", "lower", "head", "feet"] as const;
+const groupLabels: Record<string, string> = {
+  general: "ALLGEMEIN",
+  upper: "OBERKÖRPER",
+  middle: "MITTELTEIL",
+  lower: "UNTERKÖRPER",
+  head: "KOPF",
+  feet: "FÜßE"
+};
 
 const measurementGroups = groupOrder.reduce((acc, key) => {
   acc[key] = measurements.filter(m => m.group === key);
@@ -142,18 +150,8 @@ export default function FullBodySuitPage() {
     localStorage.setItem("full-body-suit-measurements", JSON.stringify({ orderNumber, ebayUsername, measurements: formData }));
   }, [orderNumber, ebayUsername, formData]);
 
-  // Validation
   const handleChange = useCallback((name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (value) {
-      const m = measurements.find(mm => mm.name === name);
-      if (m) {
-        const n = parseFloat(value);
-        setErrors(prev => ({ ...prev, [name]: (isNaN(n) || n < m.min || n > m.max) ? `Range ${m.min}–${m.max} cm` : null }));
-      }
-    } else {
-      setErrors(prev => ({ ...prev, [name]: null }));
-    }
   }, []);
 
   const filledCount = Object.values(formData).filter(Boolean).length;
@@ -292,6 +290,27 @@ export default function FullBodySuitPage() {
                   <FormInput id="order-number" label="Bestell-Nr. (optional)" value={orderNumber} onChange={setOrderNumber} placeholder="z.B. FB-12345" />
                   <FormInput id="ebay-username" label="eBay-Benutzername" value={ebayUsername} onChange={setEbayUsername} placeholder="eBay Benutzername" required />
                 </div>
+
+                {/* Gender selection */}
+                <div className="mt-6">
+                  <label className="block text-xs uppercase tracking-wider text-foreground-secondary font-data mb-2">Geschlecht</label>
+                  <div className="flex gap-3">
+                    {["Männlich", "Weiblich"].map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, Geschlecht: g }))}
+                        className={`flex-1 py-3 rounded-sm font-data text-sm uppercase tracking-wider border transition-all duration-200 ${
+                          formData.Geschlecht === g
+                            ? "border-[var(--signal)] bg-[var(--signal)]/10 text-[var(--signal)]"
+                            : "border-[var(--border)] text-foreground-secondary hover:border-[var(--border-strong)]"
+                        }`}
+                      >
+                        {g}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Active group fields */}
@@ -324,20 +343,25 @@ export default function FullBodySuitPage() {
                     transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                     className="grid grid-cols-1 md:grid-cols-2 gap-5"
                   >
-                    {measurementGroups[activeGroup].map((measurement) => (
-                      <MeasurementCard
-                        key={measurement.name}
-                        name={measurement.name}
-                        image={measurement.image}
-                        value={formData[measurement.name] || ""}
-                        onChange={(v) => handleChange(measurement.name, v)}
-                        description={measurement.description}
-                        min={measurement.min}
-                        max={measurement.max}
-                        error={errors[measurement.name]}
-                        onClick={() => setSelectedImage(measurement.image)}
-                      />
-                    ))}
+                    {measurementGroups[activeGroup].filter(mm => mm.image).map((measurement) => {
+                      const stepNum = measurements.findIndex(mm => mm.name === measurement.name) + 1;
+                      return (
+                        <div key={measurement.name} className="relative">
+                          <div className="absolute top-3 left-3 w-8 h-8 rounded-sm bg-[var(--signal)]/20 border border-[var(--signal)]/40 flex items-center justify-center z-10">
+                            <span className="font-data text-xs font-bold text-[var(--signal)]">{String(stepNum).padStart(2, "0")}</span>
+                          </div>
+                          <MeasurementCard
+                            name={measurement.name}
+                            image={measurement.image!}
+                            value={formData[measurement.name] || ""}
+                            onChange={(v) => handleChange(measurement.name, v)}
+                            description={measurement.description}
+                            error={errors[measurement.name]}
+                            onClick={() => setSelectedImage(measurement.image!)}
+                          />
+                        </div>
+                      );
+                    })}
                   </motion.div>
                 </AnimatePresence>
               </div>
