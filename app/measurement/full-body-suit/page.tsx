@@ -15,21 +15,21 @@ import { Check, AlertTriangle, ChevronRight, ChevronLeft, Save } from "lucide-re
 
 /* ── Messbilder in /images/Amo Only/ ── */
 const measurements = [
-  { name: "Gesamthöhe", description: "Messen Sie aufrecht stehend von der Kopfspitze bis zum Boden.", image: "Amo Only/1_total_height.png", group: "general" },
-  { name: "Geschlecht", description: "Wählen Sie Ihr Geschlecht für die passende Passform.", image: "Amo Only/2_Gender_Geschlecht.png", group: "general" },
-  { name: "Brustumfang", description: "Messen Sie den Umfang der vollsten Partie Ihrer Brust, horizontal geführt.", image: "Amo Only/3_Brustumfang.png", group: "upper" },
-  { name: "Halskreis", description: "Messen Sie um die Basis Ihres Halses, straff geführt.", image: "Amo Only/4_Neck Circumference.png", group: "upper" },
-  { name: "Schulterbreite", description: "Messen Sie die Breite Ihrer Schultern von Kante zu Kante.", image: "Amo Only/5_Schulterbreite (Shoulder Width).png", group: "upper" },
-  { name: "Armlänge", description: "Messen Sie von der Schulterspitze zum Gelenk, leicht gebeugt.", image: "Amo Only/5_Arm Length.png", group: "upper" },
-  { name: "Bizepsumfang", description: "Messen Sie den vollsten Teil Ihres Bizeps, angespannt.", image: "Amo Only/6_Bicep Circumference.png", group: "upper" },
-  { name: "Unterarmumfang", description: "Messen Sie den vollsten Teil Ihres Unterarms.", image: "Amo Only/7_Forearm Circumference.png", group: "upper" },
-  { name: "Rückenlänge", description: "Messen Sie von der Halsbasis bis zur Taille.", image: "Amo Only/8_Back Length.png", group: "upper" },
-  { name: "Taillenumfang", description: "Messen Sie um Ihre natürliche Taille, oberhalb der Hüften.", image: "Amo Only/8_Back Length.png", group: "middle" },
-  { name: "Hüftumfang", description: "Messen Sie den vollsten Teil Ihrer Hüften.", image: "Amo Only/10_hip_circumference.png", group: "lower" },
-  { name: "Innenbeinlänge", description: "Messen Sie von der Leiste bis zum Boden an der Innenseite des Beins.", image: "Amo Only/11_inseam.png", group: "lower" },
-  { name: "Oberschenkelumfang", description: "Messen Sie den vollsten Teil Ihres Oberschenkels.", image: "Amo Only/12_thigh_circumference_Oberschenkelumfang.png", group: "lower" },
-  { name: "Kalbumfang", description: "Messen Sie den vollsten Teil Ihrer Wade.", image: "Amo Only/13_KALBUMFALL.png", group: "lower" },
-  { name: "Fußlänge", description: "Messen Sie von der Ferse bis zur Spitze Ihres längsten Zehs.", image: "Amo Only/14_foot_length_Fusslange.png", group: "lower" },
+  { name: "Gesamthöhe", description: "Messen Sie aufrecht stehend von der Kopfspitze bis zum Boden.", image: "Amor Only/1_total_height.png", group: "general" },
+  { name: "Geschlecht", description: "Wählen Sie Ihr Geschlecht für die passende Passform.", image: "Amor Only/2_Gender_Geschlecht.png", group: "general" },
+  { name: "Brustumfang", description: "Messen Sie den Umfang der vollsten Partie Ihrer Brust, horizontal geführt.", image: "Amor Only/3_Brustumfang.png", group: "upper" },
+  { name: "Halskreis", description: "Messen Sie um die Basis Ihres Halses, straff geführt.", image: "Amor Only/4_Neck Circumference.png", group: "upper" },
+  { name: "Schulterbreite", description: "Messen Sie die Breite Ihrer Schultern von Kante zu Kante.", image: "Amor Only/5_Schulterbreite (Shoulder Width).png", group: "upper" },
+  { name: "Armlänge", description: "Messen Sie von der Schulterspitze zum Gelenk, leicht gebeugt.", image: "Amor Only/5_Arm Length.png", group: "upper" },
+  { name: "Bizepsumfang", description: "Messen Sie den vollsten Teil Ihres Bizeps, angespannt.", image: "Amor Only/6_Bicep Circumference.png", group: "upper" },
+  { name: "Unterarmumfang", description: "Messen Sie den vollsten Teil Ihres Unterarms.", image: "Amor Only/7_Forearm Circumference.png", group: "upper" },
+  { name: "Rückenlänge", description: "Messen Sie von der Halsbasis bis zur Taille.", image: "Amor Only/8_Back Length.png", group: "upper" },
+  { name: "Taillenumfang", description: "Messen Sie um Ihre natürliche Taille, oberhalb der Hüften.", image: "Amor Only/9_Rückenlänge.png", group: "middle" },
+  { name: "Hüftumfang", description: "Messen Sie den vollsten Teil Ihrer Hüften.", image: "Amor Only/10_hip_circumference.png", group: "lower" },
+  { name: "Innenbeinlänge", description: "Messen Sie von der Leiste bis zum Boden an der Innenseite des Beins.", image: "Amor Only/11_inseam.png", group: "lower" },
+  { name: "Oberschenkelumfang", description: "Messen Sie den vollsten Teil Ihres Oberschenkels.", image: "Amor Only/12_thigh_circumference_Oberschenkelumfang.png", group: "lower" },
+  { name: "Kalbumfang", description: "Messen Sie den vollsten Teil Ihrer Wade.", image: "Amor Only/13_KALBUMFALL.png", group: "lower" },
+  { name: "Fußlänge", description: "Messen Sie von der Ferse bis zur Spitze Ihres längsten Zehs.", image: "Amor Only/14_foot_length_Fusslange.png", group: "lower" },
 ];
 
 const groupOrder = ["general", "upper", "middle", "lower"] as const;
