@@ -5,18 +5,7 @@ import { useContext } from "react";
 import { motion } from "framer-motion";
 import { ThemeContext } from "./layout";
 import { Header } from "./components/Header";
-import dynamic from "next/dynamic";
 import { ArrowRight, Crosshair, ShieldCheck, Zap, Target } from "lucide-react";
-
-// Load 3D scene only on client — model-viewer is a custom element, breaks SSR
-const Scene3D = dynamic(() => import("./components/Scene3D"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="font-data text-xs text-foreground-secondary animate-pulse">3D-Modell wird geladen...</div>
-    </div>
-  ),
-});
 
 export default function HomePage() {
   const router = useRouter();
@@ -93,14 +82,35 @@ export default function HomePage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
-              {/* 3D Model */}
+              {/* Hero visual — pure CSS, always loads */}
               <motion.div
-                className="w-full lg:w-1/2 h-[350px] md:h-[480px]"
+                className="w-full lg:w-1/2 h-[350px] md:h-[480px] flex items-center justify-center"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
               >
-                <Scene3D className="w-full h-full" />
+                <div className="relative">
+                  <div className="absolute inset-0 -m-12 rounded-full bg-[var(--primary)]/10 blur-3xl animate-pulse-gentle" />
+                  <motion.div
+                    className="relative w-48 h-72 border-2 border-[var(--primary)] rounded-2xl bg-[var(--surface-elevated)] backdrop-blur-sm flex flex-col items-center justify-center gap-4 p-6"
+                    animate={{ rotateY: [0, 5, 0, -5, 0] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                    style={{ transformStyle: "preserve-3d" }}
+                  >
+                    <div className="w-16 h-16 rounded-full border-2 border-[var(--signal)] flex items-center justify-center">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-display text-lg font-bold text-crawl tracking-wide">MEASUR</div>
+                      <div className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary mt-1">Präzisionsmessung</div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5 mt-2">
+                      {[...Array(8)].map((_, i) => (
+                        <motion.div key={i} className="w-2 h-2 rounded-full bg-[var(--signal)]" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 2, delay: i * 0.25, repeat: Infinity }} />
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
               </motion.div>
             </motion.div>
           </div>
