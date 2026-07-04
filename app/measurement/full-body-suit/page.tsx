@@ -16,6 +16,7 @@ import { Check, AlertTriangle, ChevronRight, ChevronLeft, Save } from "lucide-re
 /* ── measurement definitions ── */
 const measurements = [
   { name: "Geschlecht", description: "Wählen Sie Ihr Geschlecht für die passende Passform.", image: null, group: "general" },
+  { name: "Gesamthöhe", description: "Messen Sie aufrecht stehend von der Kopfspitze bis zum Boden.", image: "total_height", group: "general" },
   { name: "Brustumfang", description: "Messen Sie den Umfang der vollsten Partie Ihrer Brust, horizontal geführt.", image: "chest_circumference", group: "upper" },
   { name: "Halskreis", description: "Messen Sie um die Basis Ihres Halses, straff geführt.", image: "neck_circumference", group: "upper" },
   { name: "Schulterbreite", description: "Messen Sie die Breite Ihrer Schultern von Kante zu Kante.", image: "shoulder_width", group: "upper" },
@@ -28,20 +29,14 @@ const measurements = [
   { name: "Innenbeinlänge", description: "Messen Sie von der Leiste bis zum Boden an der Innenseite des Beins.", image: "inseam", group: "lower" },
   { name: "Oberschenkelumfang", description: "Messen Sie den vollsten Teil Ihres Oberschenkels.", image: "thigh_circumference", group: "lower" },
   { name: "Kalbumfang", description: "Messen Sie den vollsten Teil Ihrer Wade.", image: "calf_circumference", group: "lower" },
-  { name: "Kopfbreite", description: "Messen Sie die Breite Ihres Kopfes oberhalb der Ohren.", image: "head_width", group: "head" },
-  { name: "Kopfumfang", description: "Messen Sie um Ihren Kopf oberhalb der Ohren und Augenbrauen.", image: "head_circumference", group: "head" },
-  { name: "Fußlänge", description: "Messen Sie von der Ferse bis zur Spitze Ihres längsten Zehs.", image: "foot_length", group: "feet" },
-  { name: "Gesamthöhe", description: "Messen Sie aufrecht stehend von der Kopfspitze bis zum Boden.", image: "total_height", group: "general" },
 ];
 
-const groupOrder = ["general", "upper", "middle", "lower", "head", "feet"] as const;
+const groupOrder = ["general", "upper", "middle", "lower"] as const;
 const groupLabels: Record<string, string> = {
   general: "ALLGEMEIN",
   upper: "OBERKÖRPER",
   middle: "MITTELTEIL",
-  lower: "UNTERKÖRPER",
-  head: "KOPF",
-  feet: "FÜßE"
+  lower: "UNTERKÖRPER"
 };
 
 const measurementGroups = groupOrder.reduce((acc, key) => {
