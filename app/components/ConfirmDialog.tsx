@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, X } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
+import { translations } from "../lib/translations";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -18,11 +20,15 @@ export function ConfirmDialog({
   isOpen,
   title,
   message,
-  confirmText = "Confirm",
-  cancelText = "Abort",
+  confirmText,
+  cancelText,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { lang } = useLanguage();
+  const dlg = translations.dialog[lang];
+  const effectiveConfirm = confirmText ?? dlg.confirm;
+  const effectiveCancel = cancelText ?? dlg.cancel;
   useEffect(() => {
     if (!isOpen) return;
     const handleEscape = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
@@ -83,12 +89,12 @@ export function ConfirmDialog({
               {/* Spec sheet grid */}
               <div className="border border-[var(--border)] rounded-sm overflow-hidden">
                 <div className="bg-[var(--background)] px-3 py-2 border-b border-[var(--border)]">
-                  <span className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary">SPEZIFIKATIONEN</span>
+                  <span className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary">{dlg.specs}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-px bg-[var(--border)]">
                   {/* Render spec rows — the parent passes message; we show a generic confirmation */}
                   <div className="col-span-2 bg-[var(--surface-elevated)] p-3 font-data text-xs text-foreground-secondary text-center">
-                    Bitte bestätige die Übertragung der Messwerte.
+                    {dlg.confirmTransmission}
                   </div>
                 </div>
               </div>
@@ -100,7 +106,7 @@ export function ConfirmDialog({
                 onClick={onCancel}
                 className="px-5 py-2.5 rounded-sm border border-[var(--border)] hover:border-[var(--border-strong)] transition-colors font-data text-xs uppercase tracking-wider"
               >
-                {cancelText}
+                {effectiveCancel}
               </button>
               <motion.button
                 onClick={onConfirm}
@@ -108,7 +114,7 @@ export function ConfirmDialog({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {confirmText}
+                {effectiveConfirm}
               </motion.button>
             </div>
 

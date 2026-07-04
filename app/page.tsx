@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useContext } from "react";
 import { motion } from "framer-motion";
 import { ThemeContext } from "./layout";
+import { useLanguage } from "./context/LanguageContext";
+import { translations } from "./lib/translations";
 import { Header } from "./components/Header";
 import dynamic from "next/dynamic";
 import { ArrowRight, Crosshair, ShieldCheck, Zap, Target } from "lucide-react";
@@ -20,6 +22,8 @@ const Scene3D = dynamic(() => import("./components/Scene3D"), {
 export default function HomePage() {
   const router = useRouter();
   const { resolvedTheme } = useContext(ThemeContext);
+  const { lang } = useLanguage();
+  const h = translations.home[lang];
 
   return (
     <>
@@ -42,19 +46,19 @@ export default function HomePage() {
             >
               <div className="font-data text-[11px] uppercase tracking-atelier text-[var(--signal)] mb-4 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--signal)] animate-pulse-gentle" />
-                IMPERIAL MESSBÜRO
+                {h.eyebrow}
               </div>
 
               <h1 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tight leading-[0.95] mb-6">
-                <span className="text-crawl">Präzision</span>
+                <span className="text-crawl">{h.heroTitle1}</span>
                 <br />
-                Jenseits der
+                {h.heroTitle2}
                 <br />
-                <span className="text-[var(--primary)]">Galaxie</span>
+                <span className="text-[var(--primary)]">{h.heroTitle3}</span>
               </h1>
 
               <p className="font-data text-sm md:text-base text-foreground-secondary max-w-lg mb-10 leading-relaxed">
-                Maßgeschneiderte Anzug-Konfiguration für den anspruchsvollen Piloten. Millimetergenau. Empire-getestet. Geschmiedet in den Sternen.
+                {h.heroSub}
               </p>
 
               {/* Structural CTA panels */}
@@ -66,7 +70,7 @@ export default function HomePage() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <span className="relative z-10 flex items-center gap-3 font-display text-sm uppercase tracking-wider text-[var(--primary)]">
-                    Ganzkörperanzug
+                    {h.ctaFullBody}
                     <ArrowRight size={16} />
                   </span>
                 </motion.button>
@@ -78,7 +82,7 @@ export default function HomePage() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <span className="flex items-center gap-3 font-display text-sm uppercase tracking-wider text-foreground-secondary">
-                    Helm
+                    {h.ctaHelm}
                     <ArrowRight size={16} />
                   </span>
                 </motion.button>
@@ -92,7 +96,6 @@ export default function HomePage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
-              {/* 3D Modell */}
               <motion.div
                 className="w-full lg:w-1/2 h-[350px] md:h-[480px]"
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -116,20 +119,15 @@ export default function HomePage() {
               className="mb-12"
             >
               <div className="font-data text-[11px] uppercase tracking-atelier text-foreground-secondary mb-2">
-                TECHNISCHE DATEN
+                {h.specsEyebrow}
               </div>
               <h2 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight">
-                Für den Kosmos <span className="text-crawl">entwickelt</span>
+                {h.specsTitle1} <span className="text-crawl">{h.specsTitle2}</span>
               </h2>
             </motion.div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[var(--border)] rounded-sm overflow-hidden">
-              {[
-                { icon: <Crosshair size={20} />, label: "16 Datenfelder", desc: "Millimetergenaue Erfassung" },
-                { icon: <Target size={20} />, label: "±2 mm Toleranz", desc: "Rennsport-Präzision" },
-                { icon: <Zap size={20} />, label: "Echtzeit-Prüfung", desc: "Sofortige Rückmeldung" },
-                { icon: <ShieldCheck size={20} />, label: "Verschlüsselt", desc: "Sichere Übertragung" },
-              ].map((spec, i) => (
+              {h.specs.map((spec, i) => (
                 <motion.div
                   key={spec.label}
                   className="scan-line relative bg-[var(--surface)] p-8 group cursor-default overflow-hidden"
@@ -138,7 +136,9 @@ export default function HomePage() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08, duration: 0.4 }}
                 >
-                  <div className="text-[var(--primary)] mb-4">{spec.icon}</div>
+                  <div className="text-[var(--primary)] mb-4">
+                    {[<Crosshair size={20} key="c" />, <Target size={20} key="t" />, <Zap size={20} key="z" />, <ShieldCheck size={20} key="s" />][i]}
+                  </div>
                   <div className="font-data text-xs uppercase tracking-wider text-foreground mb-1">{spec.label}</div>
                   <div className="font-data text-[11px] text-foreground-secondary">{spec.desc}</div>
                 </motion.div>
@@ -158,19 +158,15 @@ export default function HomePage() {
               className="mb-12"
             >
               <div className="font-data text-[11px] uppercase tracking-atelier text-foreground-secondary mb-2">
-                REFERENZEN
+                {h.quotesEyebrow}
               </div>
               <h2 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight">
-                Vertrauen der <span className="text-crawl">Allianz</span>
+                {h.quotesTitle1} <span className="text-crawl">{h.quotesTitle2}</span>
               </h2>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl">
-              {[
-                { quote: "Die Messgenauigkeit hat die Passform meines Anzugs revolutioniert.", author: "Wedge A.", role: "Red Squadron Leader" },
-                { quote: "Reibungsloser Prozess, präzise Ergebnisse. Absolut überzeugend.", author: "Leia O.", role: "General, Rebel Alliance" },
-                { quote: "Detailgenauigkeit und schnelle Verarbeitung — übertroffen alle Erwartungen.", author: "Han S.", role: "Schmuggler" },
-              ].map((t, i) => (
+              {h.quotes.map((t, i) => (
                 <motion.div
                   key={t.author}
                   className="hud-corners border border-[var(--border)] rounded-sm p-6 hover:border-[var(--border-strong)] transition-colors duration-300"
@@ -202,13 +198,13 @@ export default function HomePage() {
               transition={{ duration: 0.5 }}
             >
               <div className="font-data text-[11px] uppercase tracking-atelier text-[var(--signal)] mb-4">
-                STARTEN SIE JETZT
+                {h.ctaEyebrow}
               </div>
               <h2 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight mb-4">
-                Bereit für <span className="text-crawl">den Start</span>?
+                {h.ctaTitle1} <span className="text-crawl">{h.ctaTitle2}</span>?
               </h2>
               <p className="font-data text-sm text-foreground-secondary mb-8 max-w-lg mx-auto">
-                Wählen Sie zwischen Ganzkörperanzug oder Helm — millimetergenaue Konfiguration in wenigen Minuten.
+                {h.ctaSub}
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <motion.button
@@ -217,7 +213,7 @@ export default function HomePage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  Full Body Suit
+                  {h.ctaFullBody}
                 </motion.button>
                 <motion.button
                   onClick={() => router.push("/measurement/helmet")}
@@ -225,7 +221,7 @@ export default function HomePage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  Helmet
+                  {h.ctaHelm}
                 </motion.button>
               </div>
             </motion.div>
@@ -236,10 +232,10 @@ export default function HomePage() {
         <footer className="py-8 border-t border-[var(--border)]">
           <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary">
-              © {new Date().getFullYear()} MEASUR · IMPERIAL MEASUREMENT BUREAU
+              © {new Date().getFullYear()} MEASUR · {lang === "de" ? "PRÄZISIONSMESSTECHNIK" : "PRECISION MEASUREMENT TECH"}
             </div>
             <div className="font-data text-[10px] text-foreground-secondary/50">
-              A LONG TIME AGO IN A GALAXY FAR, FAR AWAY....
+              {h.footerLine}
             </div>
           </div>
         </footer>

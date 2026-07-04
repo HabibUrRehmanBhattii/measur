@@ -1,7 +1,10 @@
 "use client";
 
+import { useContext } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useLanguage } from "../context/LanguageContext";
+import { translations } from "../lib/translations";
 
 interface FailureAnimationProps {
   message?: string;
@@ -9,6 +12,8 @@ interface FailureAnimationProps {
 }
 
 export default function FailureAnimation({ message, onComplete }: FailureAnimationProps = {}) {
+  const { lang } = useLanguage();
+  const f = translations.failure[lang];
   return (
     <AnimatePresence onExitComplete={onComplete}>
       <motion.div 
@@ -85,9 +90,9 @@ export default function FailureAnimation({ message, onComplete }: FailureAnimati
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <div className="font-medium text-lg text-white">Error</div>
+            <div className="font-medium text-lg text-white">{f.title}</div>
             <div className="text-sm text-white/80 mt-1">
-              {message || "Something went wrong. Please try again."}
+              {message || f.defaultMsg}
             </div>
           </motion.div>
         </motion.div>

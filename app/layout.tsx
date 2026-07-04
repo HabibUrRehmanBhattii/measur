@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Inter, Space_Grotesk, JetBrains_Mono } from "next/fo
 import { createContext, useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import "./globals.css";
+import { LanguageProvider } from "./context/LanguageContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,7 +45,7 @@ interface ThemeContextType {
 // Create theme context
 export const ThemeContext = createContext<ThemeContextType>({
   theme: "dark",
-  resolvedTheme: "dark", 
+  resolvedTheme: "dark",
   toggleTheme: () => {},
   setTheme: () => {},
 });
@@ -62,15 +63,15 @@ export default function RootLayout({
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
     localStorage.setItem("theme", newTheme);
-    
+
     // Resolve the actual theme if system is selected
-    const resolved = newTheme === "system" 
+    const resolved = newTheme === "system"
       ? window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
       : newTheme;
-      
+
     setResolvedTheme(resolved);
     document.documentElement.setAttribute("data-theme", resolved);
-    
+
     // Add a transition class for smooth theme transitions
     document.documentElement.classList.add('theme-transition');
     setTimeout(() => {
@@ -87,7 +88,7 @@ export default function RootLayout({
   // Listen for system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    
+
     const handleChange = () => {
       if (theme === "system") {
         const newResolvedTheme = mediaQuery.matches ? "dark" : "light";
@@ -95,7 +96,7 @@ export default function RootLayout({
         document.documentElement.setAttribute("data-theme", newResolvedTheme);
       }
     };
-    
+
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, [theme]);
@@ -123,25 +124,27 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme={resolvedTheme}>
       <head>
-        <title>MEASUR — Präzisionsmessung</title>
+        <title>MEASUR — Measurement Configuration</title>
         <meta name="description" content="Advanced body measurement system for precision fits" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} antialiased`}>
         <ThemeContext.Provider value={{ theme, resolvedTheme, toggleTheme, setTheme }}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={resolvedTheme}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="min-h-screen"
-            >
-              {children}
-            </motion.div>
-          </AnimatePresence>
+          <LanguageProvider>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={resolvedTheme}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="min-h-screen"
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          </LanguageProvider>
         </ThemeContext.Provider>
       </body>
     </html>

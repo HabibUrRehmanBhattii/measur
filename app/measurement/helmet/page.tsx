@@ -1,24 +1,26 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Header } from "@/app/components/Header";
-import { FormInput } from "@/app/components/FormInput";
+import { MeasurementCard } from "@/app/components/MeasurementCard";
 import { MeasurementModal } from "@/app/components/MeasurementModal";
+import { FormInput } from "@/app/components/FormInput";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import SuccessAnimation from "@/app/components/SuccessAnimation";
 import FailureAnimation from "@/app/components/FailureAnimation";
 import { ConfirmDialog } from "@/app/components/ConfirmDialog";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "@/app/lib/translations";
+import { helmetFields } from "@/app/lib/measurements";
 import { Save, AlertTriangle } from "lucide-react";
-
-const messungen = [
-  { name: "Kopfbreite", description: "Messen Sie die Breite Ihres Kopfes von Ohr zu Ohr.", image: "Helmet Only/head_width.png" },
-  { name: "Kopfumfang", description: "Messen Sie um Ihren Kopf oberhalb der Ohren und Augenbrauen.", image: "Helmet Only/head_circumference.png" },
-];
 
 export default function HelmetPage() {
   const router = useRouter();
+  const { lang } = useLanguage();
+  const t = translations.measurement[lang];
+  const card = translations.card[lang];
 
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [orderNumber, setOrderNumber] = useState<string>("");
@@ -30,14 +32,30 @@ export default function HelmetPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  // Load/save to localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("helmet-measurements");
+      if (saved) {
+        const p = JSON.parse(saved);
+        if (p.orderNumber) setOrderNumber(p.orderNumber);
+        if (p.ebayUsername) setEbayUsername(p.ebayUsername);
+        if (p.measurements) setFormData(p.measurements);
+      }
+    } catch {}
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("helmet-measurements", JSON.stringify({ orderNumber, ebayUsername, measurements: formData }));
+  }, [orderNumber, ebayUsername, formData]);
+
   const filledCount = Object.values(formData).filter(Boolean).length;
-  const total = messungen.length;
+  const total = helmetFields.length;
 
   const prepareSubmit = useCallback(() => {
-    if (!ebayUsername.trim()) { alert("Bitte geben Sie einen eBay-Benutzernamen ein."); return; }
-    if (filledCount === 0) { alert("Bitte geben Sie mindestens einen Messwert ein."); return; }
+    if (!ebayUsername.trim()) { alert(t.needEbay); return; }
+    if (filledCount === 0) { alert(t.fillAll); return; }
     setShowConfirmDialog(true);
-  }, [ebayUsername, filledCount]);
+  }, [ebayUsername, filledCount, t]);
 
   const handleSubmit = useCallback(async () => {
     setShowConfirmDialog(false);
@@ -50,44 +68,43 @@ export default function HelmetPage() {
       });
       setIsSubmitting(false);
       if (response.ok) {
+        localStorage.removeItem("helmet-measurements");
         setShowSuccess(true);
         setTimeout(() => { setShowSuccess(false); router.push("/"); }, 2500);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        setSubmitError(errorData.message || "Übertragung fehlgeschlagen. Bitte versuchen Sie es erneut.");
+        setSubmitError(errorData.message || t.errorMsg);
         setShowFailure(true);
         setTimeout(() => setShowFailure(false), 2000);
       }
     } catch {
       setIsSubmitting(false);
-      setSubmitError("Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
+      setSubmitError(t.errorMsg);
       setShowFailure(true);
       setTimeout(() => setShowFailure(false), 2000);
     }
-  }, [orderNumber, ebayUsername, formData, router]);
+  }, [orderNumber, ebayUsername, formData, router, t]);
 
   const handleModalNavigate = useCallback((direction: "prev" | "next") => {
     if (!selectedImage) return;
-    const idx = messungen.findIndex(m => m.image === selectedImage);
+    const idx = helmetFields.findIndex(m => m.image[lang] === selectedImage);
     const next = direction === "next"
-      ? (idx + 1) % messungen.length
-      : (idx - 1 + messungen.length) % messungen.length;
-    setSelectedImage(messungen[next].image);
-  }, [selectedImage]);
+      ? (idx + 1) % helmetFields.length
+      : (idx - 1 + helmetFields.length) % helmetFields.length;
+    setSelectedImage(helmetFields[next].image[lang]);
+  }, [selectedImage, lang]);
 
   return (
     <>
       <Header />
       <main className="min-h-screen pt-24 pb-16 relative">
         {isSubmitting && <LoadingSpinner />}
-        {showSuccess && <SuccessAnimation message="Übertragung abgeschlossen" subMessage="Daten erfolgreich empfangen." />}
-        {showFailure && <FailureAnimation message={submitError || "Ein Fehler ist aufgetreten"} />}
+        {showSuccess && <SuccessAnimation message={t.successMsg} subMessage={t.successSub} />}
+        {showFailure && <FailureAnimation message={submitError || t.errorMsg} />}
         <ConfirmDialog
           isOpen={showConfirmDialog}
-          title="KONFIGURATION BESTÄTIGEN"
-          message={`Bestätigen: ${filledCount} von ${total} Messwerte werden übertragen.`}
-          confirmText="Bestätigen"
-          cancelText="Abbrechen"
+          title={t.confirmTitle}
+          message={t.confirmGeneric.replace("{filled}", String(filledCount)).replace("{total}", String(total))}
           onConfirm={handleSubmit}
           onCancel={() => setShowConfirmDialog(false)}
         />
@@ -97,10 +114,10 @@ export default function HelmetPage() {
         <div className="max-w-7xl mx-auto px-4 mb-10">
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight uppercase">
-              Helm <span className="text-crawl">Konfiguration</span>
+              {lang === "de" ? "Helm" : "Helmet"} <span className="text-crawl">{lang === "de" ? "Konfiguration" : "Configuration"}</span>
             </h1>
             <p className="font-data text-sm text-foreground-secondary mt-2">
-              Präzisionsmessung · {total} Datenfelder · Alle Felder optional
+              {lang === "de" ? "Präzisionsmessung" : "Precision Measurement"} · {total} {lang === "de" ? "Datenfelder" : "fields"} · {lang === "de" ? "Alle Felder optional" : "All fields optional"}
             </p>
           </motion.div>
         </div>
@@ -111,10 +128,10 @@ export default function HelmetPage() {
               <div className="border border-[var(--border)] rounded-sm p-6 bg-[var(--surface-elevated)]">
                 <div className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary mb-4 flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--signal)] animate-pulse-gentle" />
-                  MISSIONSFORTSCHRITT
+                  {lang === "de" ? "MISSIONSFORTSCHRITT" : "MISSION PROGRESS"}
                 </div>
                 <div className="font-data text-3xl font-bold tabular-nums text-[var(--signal)]">{filledCount}/{total}</div>
-                <div className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary mt-1">DATENFELDER</div>
+                <div className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary mt-1">{lang === "de" ? "DATENFELDER" : "DATA FIELDS"}</div>
                 <div className="mt-4 h-1 w-full bg-[var(--border)] rounded-full overflow-hidden">
                   <motion.div className="h-full bg-[var(--signal)]" animate={{ width: `${(filledCount / total) * 100}%` }} transition={{ duration: 0.5 }} />
                 </div>
@@ -125,43 +142,43 @@ export default function HelmetPage() {
               <div className="border border-[var(--border)] rounded-sm p-6 mb-6 bg-[var(--surface-elevated)]">
                 <h3 className="font-data text-xs uppercase tracking-atelier text-foreground-secondary mb-4 flex items-center gap-2">
                   <span className="w-1 h-1 rounded-full bg-[var(--primary)]" />
-                  PILOTEN-DATEN
+                  {lang === "de" ? "PILOTEN-DATEN" : "PILOT DATA"}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormInput id="order-number" label="Bestell-Nr. (optional)" value={orderNumber} onChange={setOrderNumber} placeholder="z.B. FB-12345" type="text" />
-                  <FormInput id="ebay-username" label="eBay-Benutzername" value={ebayUsername} onChange={setEbayUsername} placeholder="eBay Benutzername" required type="text" />
+                  <FormInput id="order-number" label={t.orderNumber} value={orderNumber} onChange={setOrderNumber} placeholder={t.orderNumberPlaceholder} type="text" />
+                  <FormInput id="ebay-username" label={t.ebayUsername} value={ebayUsername} onChange={setEbayUsername} placeholder={t.ebayUsernamePlaceholder} required type="text" />
                 </div>
               </div>
 
               <div className="border border-[var(--border)] rounded-sm p-6 bg-[var(--surface-elevated)]">
                 <h3 className="font-data text-xs uppercase tracking-atelier text-foreground-secondary mb-6 flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--signal)]" />
-                  MESSUNGEN · ALLE OPTIONAL
+                  {lang === "de" ? "MESSUNGEN · ALLE OPTIONAL" : "MEASUREMENTS · ALL OPTIONAL"}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {messungen.map((m) => (
-                    <div key={m.name} className="rounded-sm border border-[var(--border)] p-5 bg-[var(--background)]">
+                  {helmetFields.map((m) => (
+                    <div key={m.key} className="rounded-sm border border-[var(--border)] p-5 bg-[var(--background)]">
                       <div
                         className="relative w-full h-48 rounded-sm bg-[var(--surface-elevated)] flex items-center justify-center cursor-pointer hover:border-[var(--primary)] border border-[var(--border)] transition-all duration-300 mb-4 overflow-hidden group"
-                        onClick={() => setSelectedImage(m.image)}
+                        onClick={() => setSelectedImage(m.image[lang])}
                       >
-                        <img src={`/images/${m.image}`} alt={m.name} className="h-40 object-contain group-hover:scale-110 transition-transform duration-300" />
+                        <img src={`/images/${m.image[lang]}`} alt={m.name[lang]} className="h-40 object-contain group-hover:scale-110 transition-transform duration-300" />
                         <div className="absolute bottom-2 right-2 bg-[var(--background)]/80 backdrop-blur-sm rounded-sm px-2 py-1 font-data text-[10px] text-foreground-secondary opacity-0 group-hover:opacity-100 transition-opacity">
-                          Zum Vergrößern klicken
+                          {card.enlargeHint}
                         </div>
                       </div>
                       <div className="flex items-center gap-3 mb-3">
                         <div>
-                          <h4 className="font-data text-sm font-medium">{m.name}</h4>
-                          <p className="font-data text-[10px] text-foreground-secondary">{m.description}</p>
+                          <h4 className="font-data text-sm font-medium">{m.name[lang]}</h4>
+                          <p className="font-data text-[10px] text-foreground-secondary">{m.description[lang]}</p>
                         </div>
                       </div>
                       <FormInput
-                        id={`helmet-${m.name}`}
-                        label="Wert (optional)"
-                        value={formData[m.name] || ""}
-                        onChange={(v) => setFormData(prev => ({ ...prev, [m.name]: v }))}
-                        placeholder="Messwert eingeben"
+                        id={`helmet-${m.key}`}
+                        label={card.valueLabel}
+                        value={formData[m.key] || ""}
+                        onChange={(v) => setFormData(prev => ({ ...prev, [m.key]: v }))}
+                        placeholder={card.valuePlaceholder}
                         type="text"
                         units="cm"
                       />
@@ -173,12 +190,12 @@ export default function HelmetPage() {
               <div className="mt-6 border border-[var(--border)] rounded-sm p-6 bg-[var(--surface-elevated)]">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="font-data text-xs text-foreground-secondary">
-                    <span className="text-foreground font-bold">{filledCount}</span>/{total} Messungen · alle optional
+                    <span className="text-foreground font-bold">{filledCount}</span>/{total} {lang === "de" ? "Messungen · alle optional" : "measurements · all optional"}
                   </div>
                   <div className="flex items-center gap-3">
                     {!ebayUsername.trim() && (
                       <span className="font-data text-[11px] text-[var(--warning)] flex items-center gap-1">
-                        <AlertTriangle size={12} /> eBay-Benutzername erforderlich
+                        <AlertTriangle size={12} /> {t.ebayRequired}
                       </span>
                     )}
                     <motion.button
@@ -194,9 +211,9 @@ export default function HelmetPage() {
                       whileTap={!isSubmitting && ebayUsername.trim() ? { scale: 0.98 } : {}}
                     >
                       {isSubmitting ? (
-                        <><LoadingSpinner fullScreen={false} size="sm" /><span>Übertrage...</span></>
+                        <><LoadingSpinner fullScreen={false} size="sm" /><span>{t.submitting}</span></>
                       ) : (
-                        <><Save size={16} /><span>{filledCount === total ? "Konfiguration abschließen" : "Daten senden"}</span></>
+                        <><Save size={16} /><span>{filledCount === total ? t.submitComplete : t.submitIncomplete}</span></>
                       )}
                     </motion.button>
                   </div>
@@ -210,7 +227,7 @@ export default function HelmetPage() {
           isOpen={!!selectedImage}
           onClose={() => setSelectedImage(null)}
           selectedImage={selectedImage || ""}
-          measurements={messungen.map(m => ({ name: m.name, image: m.image }))}
+          measurements={helmetFields.map(m => ({ name: m.name[lang], image: m.image[lang] }))}
           onNavigate={handleModalNavigate}
         />
       </main>

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
+import { translations } from "../lib/translations";
 
 interface SuccessAnimationProps {
   message?: string;
@@ -13,14 +15,20 @@ interface SuccessAnimationProps {
 }
 
 export default function SuccessAnimation({
-  message = "Übertragung abgeschlossen",
-  subMessage = "Daten erfolgreich empfangen.",
+  message,
+  subMessage,
   onComplete,
-  redirectText = "Zurück",
+  redirectText,
   onRedirect,
 }: SuccessAnimationProps) {
+  const { lang } = useLanguage();
+  const s = translations.success[lang];
   const [transferProgress, setTransferProgress] = useState(0);
   const [showMessage, setShowMessage] = useState(false);
+
+  const resolvedMessage = message ?? s.defaultMsg;
+  const resolvedSubMessage = subMessage ?? s.defaultSub;
+  const resolvedRedirectText = redirectText ?? s.back;
 
   // Animate the data-transfer bar filling, then reveal the lock message
   useEffect(() => {
@@ -95,7 +103,7 @@ export default function SuccessAnimation({
             {/* Data transfer bar */}
             <div className="mb-4">
               <div className="flex justify-between font-data text-[10px] uppercase tracking-atelier text-foreground-secondary mb-1.5">
-                <span>Datenübertragung</span>
+                <span>{s.dataTransfer}</span>
                 <span>{Math.min(transferProgress, 100)}%</span>
               </div>
               <div className="h-1 w-full bg-[var(--border)] rounded-full overflow-hidden">
@@ -116,8 +124,8 @@ export default function SuccessAnimation({
                   transition={{ duration: 0.4 }}
                   className="text-center mb-6"
                 >
-                  <h3 className="font-display text-xl font-bold uppercase tracking-wide mb-1">{message}</h3>
-                  <p className="font-data text-sm text-foreground-secondary">{subMessage}</p>
+                  <h3 className="font-display text-xl font-bold uppercase tracking-wide mb-1">{resolvedMessage}</h3>
+                  <p className="font-data text-sm text-foreground-secondary">{resolvedSubMessage}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -136,7 +144,7 @@ export default function SuccessAnimation({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <span>{redirectText}</span>
+                  <span>{resolvedRedirectText}</span>
                   <ArrowRight size={14} />
                 </motion.button>
               </motion.div>

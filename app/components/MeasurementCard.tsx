@@ -12,8 +12,8 @@ interface MeasurementCardProps {
   value: string;
   onChange: (value: string) => void;
   description: string;
-  min: number;
-  max: number;
+  min?: number;
+  max?: number;
   error?: string | null;
   onClick?: () => void;
   className?: string;
@@ -119,8 +119,8 @@ export function MeasurementCard({
           value={value}
           onChange={onChange}
           tooltip={description}
-          min={min}
-          max={max}
+          min={min ?? 0}
+          max={max ?? 300}
           units="cm"
           error={error}
         />

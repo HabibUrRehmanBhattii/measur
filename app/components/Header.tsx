@@ -5,13 +5,21 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeContext } from "../layout";
+import { useLanguage } from "../context/LanguageContext";
+import { Lang } from "../lib/translations";
 import { cn } from "../utils/ui";
-import { Moon, Sun, Menu, X } from "lucide-react";
+import { Moon, Sun, Menu, X, Globe } from "lucide-react";
+
+const NAV_LABELS: Record<Lang, Record<string, string>> = {
+  de: { "/": "HOME", "/measurement/full-body-suit": "ANZUG", "/measurement/helmet": "HELM" },
+  en: { "/": "HOME", "/measurement/full-body-suit": "SUIT", "/measurement/helmet": "HELM" },
+};
 
 export function Header() {
   const router = useRouter();
   const pathname = usePathname();
-  const { theme, resolvedTheme, setTheme } = useContext(ThemeContext);
+  const { resolvedTheme, setTheme } = useContext(ThemeContext);
+  const { lang, setLang, showLanguagePicker } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -23,9 +31,9 @@ export function Header() {
   }, []);
 
   const navItems = [
-    { label: "HOME", href: "/" },
-    { label: "ANZUG", href: "/measurement/full-body-suit" },
-    { label: "HELM", href: "/measurement/helmet" },
+    { label: NAV_LABELS[lang]["/"] ?? "HOME", href: "/" },
+    { label: NAV_LABELS[lang]["/measurement/full-body-suit"] ?? "SUIT", href: "/measurement/full-body-suit" },
+    { label: NAV_LABELS[lang]["/measurement/helmet"] ?? "HELM", href: "/measurement/helmet" },
   ];
 
   return (
@@ -66,7 +74,7 @@ export function Header() {
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--signal)] animate-pulse-gentle" />
                   <span className="font-data text-[9px] uppercase tracking-atelier text-foreground-secondary">
-                    SYSTEM AKTIV
+                    {lang === "de" ? "SYSTEM AKTIV" : "SYSTEM ACTIVE"}
                   </span>
                 </div>
               </div>
@@ -101,7 +109,19 @@ export function Header() {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Language toggle */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setLang(lang === "de" ? "en" : "de")}
+              className="relative p-2 rounded-sm transition-all border border-[var(--border)] hover:border-[var(--border-strong)] font-data text-[10px] uppercase tracking-wider text-foreground-secondary hover:text-foreground flex items-center gap-1.5"
+              aria-label="Toggle language"
+            >
+              <Globe size={14} />
+              <span>{lang === "de" ? "DE" : "EN"}</span>
+            </motion.button>
+
             {/* Theme toggle */}
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -196,6 +216,23 @@ export function Header() {
                   >
                     Admin
                   </Link>
+                </motion.li>
+                <motion.li
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: (navItems.length + 1) * 0.06 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLang(lang === "de" ? "en" : "de");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left flex items-center justify-between py-2.5 px-4 rounded-sm font-data text-xs tracking-wider border border-[var(--border)] text-foreground-secondary hover:text-foreground"
+                  >
+                    <span>{lang === "de" ? "🌐 Sprache / Language" : "🌐 Language / Sprache"}</span>
+                    <span className="text-[var(--signal)]">{lang.toUpperCase()}</span>
+                  </button>
                 </motion.li>
               </motion.ul>
             </nav>

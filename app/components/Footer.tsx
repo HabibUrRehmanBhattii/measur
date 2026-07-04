@@ -1,39 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useLanguage } from "../context/LanguageContext";
+import { translations } from "../lib/translations";
 
 export function Footer() {
-  const groups = [
-    {
-      title: "MESSUNG",
-      links: [
-        { label: "Ganzkörperanzug", href: "/measurement/full-body-suit" },
-        { label: "Helm", href: "/measurement/helmet" },
-      ],
-    },
-    {
-      title: "UNTERNEHMEN",
-      links: [
-        { label: "Über uns", href: "#" },
-        { label: "Kontakt", href: "#" },
-      ],
-    },
-    {
-      title: "RECHTLICH",
-      links: [
-        { label: "Datenschutz", href: "#" },
-        { label: "Impressum", href: "#" },
-        { label: "AGB", href: "#" },
-      ],
-    },
-    {
-      title: "SYSTEM",
-      links: [
-        { label: "Admin", href: "/admin" },
-        { label: "Status", href: "#" },
-      ],
-    },
-  ];
+  const { lang } = useLanguage();
+  const f = translations.footer[lang];
+
+  const groups = [f.measurGroup, f.companyGroup, f.legalGroup, f.systemGroup];
 
   return (
     <footer className="relative border-t border-[var(--border)] bg-[var(--background)]">
@@ -71,10 +46,10 @@ export function Footer() {
 
         <div className="mt-8 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row justify-between items-center gap-3">
           <div className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary">
-            © {new Date().getFullYear()} MEASUR · PRÄZISIONSMESSTECHNIK
+            © {new Date().getFullYear()} MEASUR · {lang === "de" ? "PRÄZISIONSMESSTECHNIK" : "PRECISION MEASUREMENT TECH"}
           </div>
           <div className="font-data text-[10px] text-foreground-secondary/50">
-            MILLIMETERGENAU · GERMAN ENGINEERING
+            {f.sub}
           </div>
         </div>
       </div>

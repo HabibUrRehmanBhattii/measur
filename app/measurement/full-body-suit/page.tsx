@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/app/components/Header";
@@ -11,39 +11,10 @@ import LoadingSpinner from "@/app/components/LoadingSpinner";
 import SuccessAnimation from "@/app/components/SuccessAnimation";
 import FailureAnimation from "@/app/components/FailureAnimation";
 import { ConfirmDialog } from "@/app/components/ConfirmDialog";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "@/app/lib/translations";
+import { suitFields, fieldGroups, groupLabels, FieldGroup } from "@/app/lib/measurements";
 import { Check, AlertTriangle, ChevronRight, ChevronLeft, Save } from "lucide-react";
-
-/* ── Messbilder in /images/Amo Only/ ── */
-const measurements = [
-  { name: "Gesamthöhe", description: "Messen Sie aufrecht stehend von der Kopfspitze bis zum Boden.", image: "Amor Only/1_total_height.png", group: "general" },
-  { name: "Geschlecht", description: "Wählen Sie Ihr Geschlecht für die passende Passform.", image: "Amor Only/2_Gender_Geschlecht.png", group: "general" },
-  { name: "Brustumfang", description: "Messen Sie den Umfang der vollsten Partie Ihrer Brust, horizontal geführt.", image: "Amor Only/3_Brustumfang.png", group: "upper" },
-  { name: "Halskreis", description: "Messen Sie um die Basis Ihres Halses, straff geführt.", image: "Amor Only/4_Neck Circumference.png", group: "upper" },
-  { name: "Schulterbreite", description: "Messen Sie die Breite Ihrer Schultern von Kante zu Kante.", image: "Amor Only/5_Schulterbreite (Shoulder Width).png", group: "upper" },
-  { name: "Armlänge", description: "Messen Sie von der Schulterspitze zum Gelenk, leicht gebeugt.", image: "Amor Only/5_Arm Length.png", group: "upper" },
-  { name: "Bizepsumfang", description: "Messen Sie den vollsten Teil Ihres Bizeps, angespannt.", image: "Amor Only/6_Bicep Circumference.png", group: "upper" },
-  { name: "Unterarmumfang", description: "Messen Sie den vollsten Teil Ihres Unterarms.", image: "Amor Only/7_Forearm Circumference.png", group: "upper" },
-  { name: "Rückenlänge", description: "Messen Sie von der Halsbasis bis zur Taille.", image: "Amor Only/8_Back Length.png", group: "upper" },
-  { name: "Taillenumfang", description: "Messen Sie um Ihre natürliche Taille, oberhalb der Hüften.", image: "Amor Only/9_Rückenlänge.png", group: "middle" },
-  { name: "Hüftumfang", description: "Messen Sie den vollsten Teil Ihrer Hüften.", image: "Amor Only/10_hip_circumference.png", group: "lower" },
-  { name: "Innenbeinlänge", description: "Messen Sie von der Leiste bis zum Boden an der Innenseite des Beins.", image: "Amor Only/11_inseam.png", group: "lower" },
-  { name: "Oberschenkelumfang", description: "Messen Sie den vollsten Teil Ihres Oberschenkels.", image: "Amor Only/12_thigh_circumference_Oberschenkelumfang.png", group: "lower" },
-  { name: "Kalbumfang", description: "Messen Sie den vollsten Teil Ihrer Wade.", image: "Amor Only/13_KALBUMFALL.png", group: "lower" },
-  { name: "Fußlänge", description: "Messen Sie von der Ferse bis zur Spitze Ihres längsten Zehs.", image: "Amor Only/14_foot_length_Fusslange.png", group: "lower" },
-];
-
-const groupOrder = ["general", "upper", "middle", "lower"] as const;
-const groupLabels: Record<string, string> = {
-  general: "ALLGEMEIN",
-  upper: "OBERKÖRPER",
-  middle: "MITTELTEIL",
-  lower: "UNTERKÖRPER"
-};
-
-const measurementGroups = groupOrder.reduce((acc, key) => {
-  acc[key] = measurements.filter(m => m.group === key);
-  return acc;
-}, {} as Record<string, typeof measurements>);
 
 /* ── circular progress ring ── */
 function ProgressRing({ radius = 36, stroke = 4, progress }: { radius?: number; stroke?: number; progress: number }) {
@@ -66,60 +37,14 @@ function ProgressRing({ radius = 36, stroke = 4, progress }: { radius?: number; 
   );
 }
 
-/* ── vertical telemetry stepper ── */
-function TelemetryStepper({ groups, active, completedMap, onSelect }: {
-  groups: string[]; active: string; completedMap: Record<string, number>; onSelect: (g: string) => void;
-}) {
-  return (
-    <div className="space-y-1">
-      {groups.map((group, idx) => {
-        const isActive = group === active;
-        const isComplete = completedMap[group] === measurementGroups[group].length;
-        return (
-          <button
-            key={group}
-            type="button"
-            onClick={() => onSelect(group)}
-            className="w-full flex items-center gap-4 py-3 px-3 rounded-sm transition-colors duration-200 group text-left"
-          >
-            {/* Step indicator */}
-            <div className="relative flex-shrink-0">
-              <div className={`w-8 h-8 rounded-sm border flex items-center justify-center font-data text-xs transition-all duration-300 ${
-                isActive ? "border-[var(--signal)] bg-[var(--signal)]/10 text-[var(--signal)]" :
-                isComplete ? "border-[var(--success)] bg-[var(--success)]/10 text-[var(--success)]" :
-                "border-[var(--border)] text-foreground-secondary"
-              }`}>
-                {isComplete ? <Check size={14} /> : <span>{String(idx + 1).padStart(2, "0")}</span>}
-              </div>
-              {/* Connector line */}
-              {idx < groups.length - 1 && (
-                <div className="absolute left-1/2 top-full -translate-x-1/2 w-px h-3 bg-[var(--border)]" />
-              )}
-            </div>
-            {/* Label */}
-            <div className="flex-1 min-w-0">
-              <div className={`font-data text-xs uppercase tracking-atelier truncate transition-colors duration-200 ${
-                isActive ? "text-foreground" : "text-foreground-secondary"
-              }`}>
-                {groupLabels[group]}
-              </div>
-              <div className="font-data text-[10px] text-foreground-secondary/50 mt-0.5">
-                {completedMap[group]}/{measurementGroups[group].length}
-              </div>
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 /* ── main page ── */
 export default function FullBodySuitPage() {
   const router = useRouter();
+  const { lang } = useLanguage();
+  const t = translations.measurement[lang];
+  const labels = groupLabels[lang];
 
   const [formData, setFormData] = useState<Record<string, string>>({});
-  const [errors, setErrors] = useState<Record<string, string | null>>({});
   const [orderNumber, setOrderNumber] = useState<string>("");
   const [ebayUsername, setEbayUsername] = useState<string>("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -128,44 +53,45 @@ export default function FullBodySuitPage() {
   const [showFailure, setShowFailure] = useState<boolean>(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [activeGroup, setActiveGroup] = useState<string>("general");
+  const [activeGroup, setActiveGroup] = useState<FieldGroup>("general");
 
   // Load / persist
   useEffect(() => {
-    const saved = localStorage.getItem("full-body-suit-measurements");
-    if (saved) {
-      try {
+    try {
+      const saved = localStorage.getItem("full-body-suit-measurements");
+      if (saved) {
         const p = JSON.parse(saved);
         if (p.orderNumber) setOrderNumber(p.orderNumber);
         if (p.ebayUsername) setEbayUsername(p.ebayUsername);
         if (p.measurements) setFormData(p.measurements);
-      } catch {}
-    }
+      }
+    } catch {}
   }, []);
   useEffect(() => {
     localStorage.setItem("full-body-suit-measurements", JSON.stringify({ orderNumber, ebayUsername, measurements: formData }));
   }, [orderNumber, ebayUsername, formData]);
 
-  const handleChange = useCallback((name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleChange = useCallback((key: string, value: string) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
   }, []);
 
   const filledCount = Object.values(formData).filter(Boolean).length;
-  const total = measurements.length;
+  const total = suitFields.length;
   const progress = total > 0 ? (filledCount / total) * 100 : 0;
   const isComplete = filledCount === total;
 
-  const completedMap = groupOrder.reduce((acc, key) => {
-    acc[key] = measurements.filter(m => m.group === key && formData[m.name]).length;
+  const groupFields = (g: FieldGroup) => suitFields.filter(m => m.group === g);
+
+  const completedMap = fieldGroups.reduce((acc, key) => {
+    acc[key] = suitFields.filter(m => m.group === key && formData[m.key]).length;
     return acc;
   }, {} as Record<string, number>);
 
   const prepareSubmit = useCallback(() => {
-    if (Object.values(errors).some(e => e)) { alert("Please correct the errors before submitting."); return; }
-    if (!ebayUsername.trim()) { alert("Please enter an eBay username."); return; }
-    if (filledCount === 0) { alert("Please enter at least one measurement before submitting."); return; }
+    if (!ebayUsername.trim()) { alert(t.needEbay); return; }
+    if (filledCount === 0) { alert(t.fillAll); return; }
     setShowConfirmDialog(true);
-  }, [errors, orderNumber, ebayUsername, filledCount]);
+  }, [ebayUsername, filledCount, t]);
 
   const handleSubmit = useCallback(async () => {
     setShowConfirmDialog(false);
@@ -183,27 +109,27 @@ export default function FullBodySuitPage() {
         setTimeout(() => { setShowSuccess(false); router.push("/"); }, 2500);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        setSubmitError(errorData.message || "Failed to submit. Please try again.");
+        setSubmitError(errorData.message || t.errorMsg);
         setShowFailure(true);
         setTimeout(() => setShowFailure(false), 2000);
       }
     } catch {
       setIsSubmitting(false);
-      setSubmitError("An error occurred. Please try again.");
+      setSubmitError(t.errorMsg);
       setShowFailure(true);
       setTimeout(() => setShowFailure(false), 2000);
     }
-  }, [orderNumber, ebayUsername, formData, router]);
+  }, [orderNumber, ebayUsername, formData, router, t]);
 
   const handleModalNavigate = useCallback((direction: "prev" | "next") => {
     if (!selectedImage) return;
-    const idx = measurements.findIndex(m => m.image === selectedImage);
-    const next = direction === "next" ? (idx + 1) % measurements.length : (idx - 1 + measurements.length) % measurements.length;
-    setSelectedImage(measurements[next].image);
-  }, [selectedImage]);
+    const idx = suitFields.findIndex(m => m.image[lang] === selectedImage);
+    const next = direction === "next" ? (idx + 1) % suitFields.length : (idx - 1 + suitFields.length) % suitFields.length;
+    setSelectedImage(suitFields[next].image[lang]);
+  }, [selectedImage, lang]);
 
-  const goNextGroup = () => { const i = groupOrder.indexOf(activeGroup as any); if (i < groupOrder.length - 1) setActiveGroup(groupOrder[i + 1]); };
-  const goPrevGroup = () => { const i = groupOrder.indexOf(activeGroup as any); if (i > 0) setActiveGroup(groupOrder[i - 1]); };
+  const goNextGroup = () => { const i = fieldGroups.indexOf(activeGroup); if (i < fieldGroups.length - 1) setActiveGroup(fieldGroups[i + 1]); };
+  const goPrevGroup = () => { const i = fieldGroups.indexOf(activeGroup); if (i > 0) setActiveGroup(fieldGroups[i - 1]); };
 
   return (
     <>
@@ -211,14 +137,12 @@ export default function FullBodySuitPage() {
 
       <main className="min-h-screen pt-24 pb-16 relative">
         {isSubmitting && <LoadingSpinner />}
-        {showSuccess && <SuccessAnimation message="Transmission Complete" subMessage="Data received by Imperial Command." />}
-        {showFailure && <FailureAnimation message={submitError || "Ein Fehler ist aufgetreten"} />}
+        {showSuccess && <SuccessAnimation message={t.successMsg} subMessage={t.successSub} />}
+        {showFailure && <FailureAnimation message={submitError || t.errorMsg} />}
         <ConfirmDialog
           isOpen={showConfirmDialog}
-          title="CONFIRM CONFIGURATION"
-          message={`Bestätigen: ${filledCount} von ${total} Messwerte übertragen.`}
-          confirmText="Confirm"
-          cancelText="Abort"
+          title={t.confirmTitle}
+          message={t.confirmGeneric.replace("{filled}", String(filledCount)).replace("{total}", String(total))}
           onConfirm={handleSubmit}
           onCancel={() => setShowConfirmDialog(false)}
         />
@@ -227,10 +151,10 @@ export default function FullBodySuitPage() {
         <div className="max-w-7xl mx-auto px-4 mb-10">
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight uppercase">
-              Ganzkörperanzug <span className="text-crawl">Konfiguration</span>
+              {lang === "de" ? "Ganzkörperanzug" : "Full Body Suit"} <span className="text-crawl">{lang === "de" ? "Konfiguration" : "Configuration"}</span>
             </h1>
             <p className="font-data text-sm text-foreground-secondary mt-2">
-              Präzisionsmessung · 16 Datenfelder · Millimetergenau
+              {lang === "de" ? "Präzisionsmessung" : "Precision Measurement"} · {total} {lang === "de" ? "Datenfelder" : "Data Fields"} · {lang === "de" ? "Millimetergenau" : "Millimeter-accurate"}
             </p>
           </motion.div>
         </div>
@@ -247,7 +171,7 @@ export default function FullBodySuitPage() {
                   <ProgressRing progress={progress} radius={32} stroke={3} />
                   <div>
                     <div className="font-data text-2xl font-bold tabular-nums">{Math.round(progress)}%</div>
-                    <div className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary">{filledCount}/{total} Felder</div>
+                    <div className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary">{filledCount}/{total} {lang === "de" ? "Felder" : "fields"}</div>
                   </div>
                 </div>
                 <div className="h-1 w-full bg-[var(--border)] rounded-full overflow-hidden">
@@ -259,15 +183,54 @@ export default function FullBodySuitPage() {
               <div className="hidden lg:block border border-[var(--border)] rounded-sm p-4 bg-[var(--surface-elevated)]">
                 <div className="font-data text-[10px] uppercase tracking-atelier text-foreground-secondary mb-4 flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--signal)] animate-pulse-gentle" />
-                  TELEMETRY
+                  {lang === "de" ? "TELEMETRIE" : "TELEMETRY"}
                 </div>
-                <TelemetryStepper groups={[...groupOrder]} active={activeGroup} completedMap={completedMap} onSelect={setActiveGroup} />
+                <div className="space-y-1">
+                  {fieldGroups.map((group, idx) => {
+                    const isActive = group === activeGroup;
+                    const isComplete = completedMap[group] === groupFields(group).length;
+                    return (
+                      <button
+                        key={group}
+                        type="button"
+                        onClick={() => setActiveGroup(group)}
+                        className="w-full flex items-center gap-4 py-3 px-3 rounded-sm transition-colors duration-200 group text-left"
+                      >
+                        {/* Step indicator */}
+                        <div className="relative flex-shrink-0">
+                          <div className={`w-8 h-8 rounded-sm border flex items-center justify-center font-data text-xs transition-all duration-300 ${
+                            isActive ? "border-[var(--signal)] bg-[var(--signal)]/10 text-[var(--signal)]" :
+                            isComplete ? "border-[var(--success)] bg-[var(--success)]/10 text-[var(--success)]" :
+                            "border-[var(--border)] text-foreground-secondary"
+                          }`}>
+                            {isComplete ? <Check size={14} /> : <span>{String(idx + 1).padStart(2, "0")}</span>}
+                          </div>
+                          {/* Connector line */}
+                          {idx < fieldGroups.length - 1 && (
+                            <div className="absolute left-1/2 top-full -translate-x-1/2 w-px h-3 bg-[var(--border)]" />
+                          )}
+                        </div>
+                        {/* Label */}
+                        <div className="flex-1 min-w-0">
+                          <div className={`font-data text-xs uppercase tracking-atelier truncate transition-colors duration-200 ${
+                            isActive ? "text-foreground" : "text-foreground-secondary"
+                          }`}>
+                            {labels[group]}
+                          </div>
+                          <div className="font-data text-[10px] text-foreground-secondary/50 mt-0.5">
+                            {completedMap[group]}/{groupFields(group).length}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
 
                 {/* Progress ring at bottom of stepper */}
                 <div className="mt-6 pt-4 border-t border-[var(--border)] flex items-center gap-4">
                   <ProgressRing progress={progress} radius={36} stroke={4} />
                   <div>
-                    <div className="font-data text-xs uppercase tracking-atelier text-foreground-secondary">PROGRESS</div>
+                    <div className="font-data text-xs uppercase tracking-atelier text-foreground-secondary">{lang === "de" ? "FORTSCHRITT" : "PROGRESS"}</div>
                     <div className="font-data text-lg font-bold tabular-nums">{Math.round(progress)}%</div>
                   </div>
                 </div>
@@ -280,24 +243,24 @@ export default function FullBodySuitPage() {
               <div className="border border-[var(--border)] rounded-sm p-6 mb-6 bg-[var(--surface-elevated)]">
                 <h3 className="font-data text-xs uppercase tracking-atelier text-foreground-secondary mb-4 flex items-center gap-2">
                   <span className="w-1 h-1 rounded-full bg-[var(--primary)]" />
-                  PILOTEN-DATEN
+                  {lang === "de" ? "PILOTEN-DATEN" : "PILOT DATA"}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormInput id="order-number" label="Bestell-Nr. (optional)" value={orderNumber} onChange={setOrderNumber} placeholder="z.B. FB-12345" />
-                  <FormInput id="ebay-username" label="eBay-Benutzername" value={ebayUsername} onChange={setEbayUsername} placeholder="eBay Benutzername" required />
+                  <FormInput id="order-number" label={t.orderNumber} value={orderNumber} onChange={setOrderNumber} placeholder={t.orderNumberPlaceholder} />
+                  <FormInput id="ebay-username" label={t.ebayUsername} value={ebayUsername} onChange={setEbayUsername} placeholder={t.ebayUsernamePlaceholder} required />
                 </div>
 
                 {/* Gender selection */}
                 <div className="mt-6">
-                  <label className="block text-xs uppercase tracking-wider text-foreground-secondary font-data mb-2">Geschlecht</label>
+                  <label className="block text-xs uppercase tracking-wider text-foreground-secondary font-data mb-2">{t.genderLabel}</label>
                   <div className="flex gap-3">
-                    {["Männlich", "Weiblich"].map((g) => (
+                    {[t.genderMale, t.genderFemale].map((g) => (
                       <button
                         key={g}
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, Geschlecht: g }))}
+                        onClick={() => setFormData(prev => ({ ...prev, gender: g }))}
                         className={`flex-1 py-3 rounded-sm font-data text-sm uppercase tracking-wider border transition-all duration-200 ${
-                          formData.Geschlecht === g
+                          formData.gender === g
                             ? "border-[var(--signal)] bg-[var(--signal)]/10 text-[var(--signal)]"
                             : "border-[var(--border)] text-foreground-secondary hover:border-[var(--border-strong)]"
                         }`}
@@ -314,15 +277,15 @@ export default function FullBodySuitPage() {
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-data text-xs uppercase tracking-atelier text-foreground-secondary flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-[var(--signal)]" />
-                    {groupLabels[activeGroup]} · {completedMap[activeGroup]}/{measurementGroups[activeGroup].length}
+                    {labels[activeGroup]} · {completedMap[activeGroup]}/{groupFields(activeGroup).length}
                   </h3>
                   <div className="flex gap-2">
-                    {groupOrder.indexOf(activeGroup as any) > 0 && (
+                    {fieldGroups.indexOf(activeGroup) > 0 && (
                       <button type="button" onClick={goPrevGroup} className="p-2 rounded-sm border border-[var(--border)] hover:border-[var(--border-strong)] transition-colors">
                         <ChevronLeft size={16} />
                       </button>
                     )}
-                    {groupOrder.indexOf(activeGroup as any) < groupOrder.length - 1 && (
+                    {fieldGroups.indexOf(activeGroup) < fieldGroups.length - 1 && (
                       <button type="button" onClick={goNextGroup} className="p-2 rounded-sm border border-[var(--border)] hover:border-[var(--border-strong)] transition-colors">
                         <ChevronRight size={16} />
                       </button>
@@ -339,21 +302,21 @@ export default function FullBodySuitPage() {
                     transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                     className="grid grid-cols-1 md:grid-cols-2 gap-5"
                   >
-                    {measurementGroups[activeGroup].map((measurement) => {
-                      const stepNum = measurements.findIndex(mm => mm.name === measurement.name) + 1;
+                    {groupFields(activeGroup).map((m) => {
+                      const stepNum = suitFields.findIndex(mm => mm.key === m.key) + 1;
                       return (
-                        <div key={measurement.name} className="relative">
+                        <div key={m.key} className="relative">
                           <div className="absolute top-3 left-3 w-8 h-8 rounded-sm bg-[var(--signal)]/20 border border-[var(--signal)]/40 flex items-center justify-center z-10">
                             <span className="font-data text-xs font-bold text-[var(--signal)]">{String(stepNum).padStart(2, "0")}</span>
                           </div>
                           <MeasurementCard
-                            name={measurement.name}
-                            image={measurement.image!}
-                            value={formData[measurement.name] || ""}
-                            onChange={(v) => handleChange(measurement.name, v)}
-                            description={measurement.description}
-                            error={errors[measurement.name]}
-                            onClick={() => setSelectedImage(measurement.image!)}
+                            name={m.name[lang]}
+                            image={m.image[lang]}
+                            value={formData[m.key] || ""}
+                            onChange={(v) => handleChange(m.key, v)}
+                            description={m.description[lang]}
+                            error={null}
+                            onClick={() => setSelectedImage(m.image[lang])}
                           />
                         </div>
                       );
@@ -366,20 +329,20 @@ export default function FullBodySuitPage() {
               <div className="mt-6 border border-[var(--border)] rounded-sm p-6 bg-[var(--surface-elevated)]">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="font-data text-xs text-foreground-secondary">
-                    <span className="text-foreground font-bold">{filledCount}</span>/{total} Messwerte
-                    {filledCount < total && <span className="text-foreground-secondary/60"> — optional verbleibend</span>}
+                    <span className="text-foreground font-bold">{filledCount}</span>/{total} {lang === "de" ? "Messwerte" : "measurements"}
+                    {filledCount < total && <span className="text-foreground-secondary/60"> — {lang === "de" ? "optional verbleibend" : "optional remaining"}</span>}
                   </div>
 
                   <div className="flex items-center gap-3">
                     {!ebayUsername.trim() && (
                       <span className="font-data text-[11px] text-[var(--warning)] flex items-center gap-1">
-                        <AlertTriangle size={12} /> eBay-Benutzername erforderlich
+                        <AlertTriangle size={12} /> {t.ebayRequired}
                       </span>
                     )}
                     <motion.button
                       type="button"
                       onClick={prepareSubmit}
-                      disabled={isSubmitting || !!Object.values(errors).some(e => e) || !ebayUsername.trim()}
+                      disabled={isSubmitting || !ebayUsername.trim()}
                       className={`px-8 py-3 rounded-sm font-data text-sm uppercase tracking-wider flex items-center gap-2 transition-all duration-300 border ${
                         isComplete
                           ? "bg-transparent border-[var(--signal)] text-[var(--signal)] animate-glow"
@@ -389,9 +352,9 @@ export default function FullBodySuitPage() {
                       whileTap={!isSubmitting && ebayUsername.trim() ? { scale: 0.98 } : {}}
                     >
                       {isSubmitting ? (
-                        <><LoadingSpinner fullScreen={false} size="sm" /><span>Übertrage...</span></>
+                        <><LoadingSpinner fullScreen={false} size="sm" /><span>{t.submitting}</span></>
                       ) : (
-                        <><Save size={16} /><span>{isComplete ? "Konfiguration abschließen" : "Daten senden"}</span></>
+                        <><Save size={16} /><span>{isComplete ? t.submitComplete : t.submitIncomplete}</span></>
                       )}
                     </motion.button>
                   </div>
@@ -405,7 +368,7 @@ export default function FullBodySuitPage() {
           isOpen={!!selectedImage}
           onClose={() => setSelectedImage(null)}
           selectedImage={selectedImage || ""}
-          measurements={measurements.map(m => ({ name: m.name, image: m.image }))}
+          measurements={suitFields.map(m => ({ name: m.name[lang], image: m.image[lang] }))}
           onNavigate={handleModalNavigate}
         />
       </main>
